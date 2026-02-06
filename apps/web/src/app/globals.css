@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* ===========================================
+   TransLogistics Design System
+   Enterprise-grade, Trust-driven
+   =========================================== */
+
+@theme {
+  --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Neutral Enterprise Palette */
+  --color-slate-950: #0f172a;
+  --color-slate-900: #1e293b;
+  --color-slate-800: #334155;
+  --color-slate-700: #475569;
+  --color-slate-600: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-400: #cbd5e1;
+  --color-slate-300: #e2e8f0;
+  --color-slate-200: #f1f5f9;
+  --color-slate-100: #f8fafc;
+
+  /* Accent - Used sparingly */
+  --color-accent: #0066CC;
+  --color-accent-dark: #004d99;
+
+  /* WhatsApp */
+  --color-whatsapp: #25D366;
+  --color-whatsapp-hover: #1da851;
+}
+
+/* Google Fonts - Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Base */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+  color: var(--color-slate-900);
+}
+
+/* Selection */
+::selection {
+  background: var(--color-accent);
+  color: white;
+}

@@ -1,0 +1,30 @@
+{
+    "name": "translogistics",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Production-grade multi-hub logistics platform",
+    "scripts": {
+        "dev": "pnpm run --parallel --filter './apps/*' dev",
+        "dev:api": "pnpm --filter @translogistics/api dev",
+        "dev:web": "pnpm --filter @translogistics/web dev",
+        "dev:ai": "cd services/ai-engine && uvicorn app.main:app --reload",
+        "build": "pnpm run --filter './apps/*' build",
+        "build:api": "pnpm --filter @translogistics/api build",
+        "build:web": "pnpm --filter @translogistics/web build",
+        "lint": "pnpm run --parallel --filter './apps/*' --filter './packages/*' lint",
+        "typecheck": "pnpm run --parallel --filter './apps/*' --filter './packages/*' typecheck",
+        "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules",
+        "docker:up": "docker-compose up -d",
+        "docker:down": "docker-compose down",
+        "docker:logs": "docker-compose logs -f",
+        "docker:build": "docker-compose build"
+    },
+    "devDependencies": {
+        "typescript": "^5.6.0"
+    },
+    "engines": {
+        "node": ">=20.0.0",
+        "pnpm": ">=9.0.0"
+    },
+    "packageManager": "pnpm@9.12.0"
+}

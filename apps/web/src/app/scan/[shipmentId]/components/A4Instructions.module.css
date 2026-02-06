@@ -1,0 +1,114 @@
+.container {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+}
+
+.steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    counter-reset: step;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    counter-increment: step;
+}
+
+.step:last-child {
+    border-bottom: none;
+}
+
+.step::before {
+    content: counter(step);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.text {
+    color: #475569;
+    line-height: 1.5;
+}
+
+.text strong {
+    color: #1e293b;
+}
+
+.diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    border: 2px dashed #cbd5e1;
+    margin-bottom: 1rem;
+}
+
+.package {
+    font-size: 3rem;
+    animation: pulse 2s infinite;
+}
+
+.a4sheet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 85px;
+    background: white;
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #3b82f6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.note {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-align: center;
+    margin: 0;
+    font-style: italic;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}

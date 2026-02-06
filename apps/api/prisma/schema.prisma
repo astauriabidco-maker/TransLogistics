@@ -1,0 +1,1623 @@
+// ==================================================
+// TransLogistics — Prisma Schema
+// ==================================================
+// Production-ready schema for multi-hub logistics platform
+// Version: 1.0.0
+// ==================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================================================
+// ENUMS
+// ==================================================
+
+enum UserRole {
+  CUSTOMER
+  HUB_OPERATOR
+  DRIVER
+  HUB_ADMIN
+  PLATFORM_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum HubStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum RouteStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  DEPRECATED
+}
+
+enum PricingRuleStatus {
+  DRAFT
+  ACTIVE
+  SUPERSEDED
+}
+
+enum ShipmentStatus {
+  DRAFT // Initial (before payment)
+  CREATED // Payment confirmed - shipment operational
+  RECEIVED_AT_HUB // Package received at origin hub
+  IN_TRANSIT // Moving between hubs
+  ARRIVED // At destination hub
+  OUT_FOR_DELIVERY // With driver
+  DELIVERED // Complete
+  EXCEPTION // Issue requiring resolution
+  CANCELLED // Cancelled
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ScanStatus {
+  PROCESSING
+  COMPLETED
+  VALIDATED
+  REJECTED
+}
+
+enum PaymentStatus {
+  INITIATED // Paiement créé, lien généré
+  PENDING // En attente provider
+  PROCESSING // En cours de traitement
+  CONFIRMED // Paiement réussi et final
+  FAILED // Paiement échoué
+  EXPIRED // Lien expiré
+  REFUNDED // Remboursé
+}
+
+enum PaymentProvider {
+  CINETPAY
+  NOTCHPAY
+  STRIPE
+}
+
+enum PaymentMethod {
+  MOBILE_MONEY
+  CASH
+  CARD
+}
+
+enum DriverStatus {
+  ONBOARDING
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum DispatchTaskStatus {
+  CREATED // Initial, not yet assigned
+  ASSIGNED // Driver assigned
+  EN_ROUTE_PICKUP // Driver heading to pickup
+  PICKED_UP // Items collected
+  EN_ROUTE_DELIVERY // Driver heading to delivery
+  DELIVERED // Complete (terminal)
+  FAILED // Failed (terminal)
+}
+
+enum ReferralStatus {
+  CREATED
+  CONVERTED
+  REWARDED
+  EXPIRED
+}
+
+enum WhatsAppState {
+  INIT
+  CHOIX_SERVICE
+  SCAN_PHOTO
+  CALCUL_PRIX
+  CONFIRMATION
+  PAIEMENT
+  SUIVI
+}
+
+enum ScanRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  MANUAL_REVIEW_REQUIRED
+}
+
+enum WeightSource {
+  DECLARED // Déclaré par utilisateur
+  AI_SCAN // Mesuré par VolumeScan
+  MANUAL // Surcharge manuelle opérateur
+}
+
+enum LedgerEntryType {
+  CREDIT // Payment received (positive)
+  DEBIT // Refund/compensation (negative)
+}
+
+// ==================================================
+// ANALYTICS ENUMS
+// ==================================================
+
+enum LeadSource {
+  WHATSAPP_CTA // From landing page WhatsApp CTA
+  WHATSAPP_DIRECT // Direct WhatsApp contact
+  WEB // Web form submission
+  REFERRAL // Via referral program
+  B2B_CONTACT // B2B contact form
+  AGENT_ONBOARDING // Onboarded by agent
+  UNKNOWN // Legacy / untracked
+}
+
+enum RouteCostType {
+  FUEL // Fuel costs
+  DRIVER_WAGE // Driver compensation
+  CUSTOMS // Customs fees
+  HANDLING // Hub handling
+  INSURANCE // Insurance costs
+  THIRD_PARTY // Third-party logistics
+  OTHER // Other costs
+}
+
+// ==================================================
+// SHOP & SHIP ENUMS
+// ==================================================
+
+enum PurchaseRequestStatus {
+  SUBMITTED // Customer submitted request
+  QUOTED // Agent quoted fees
+  APPROVED // Customer approved
+  REJECTED // Customer declined
+  ORDERING // Orders being placed
+  AWAITING_ARRIVAL // Waiting for items
+  READY_TO_SHIP // All items received
+  SHIPPED // Consolidated & shipped
+  COMPLETED // Delivered
+  CANCELLED // Cancelled
+}
+
+enum SupplierOrderStatus {
+  DRAFT // Created, not ordered
+  PLACED // Order sent to supplier
+  SHIPPED_TO_HUB // Supplier shipped
+  RECEIVED // At hub
+  CONSOLIDATED // Added to batch
+  EXCEPTION // Issue requiring human action
+  CANCELLED // Permanently cancelled
+}
+
+enum SupplierOrderExceptionType {
+  MISSING_ITEMS // Quantity received < expected
+  DAMAGED // Items damaged in transit
+  WRONG_ITEM // Received different item
+  DELAYED // Supplier delay beyond SLA
+  LOST // Package never arrived
+  OTHER // Other issue
+}
+
+enum ConsolidationBatchStatus {
+  OPEN // Accepting items
+  CLOSED // No more items
+  PACKED // Physically packed
+  SHIPMENT_CREATED // Linked to Shipment
+}
+
+enum ServiceFeeType {
+  PROCUREMENT // Buying service fee
+  HANDLING // Handling at hub
+  CONSOLIDATION // Grouping fee
+  CUSTOMS // Customs clearance
+}
+
+// ==================================================
+// USER AGGREGATE
+// ==================================================
+
+model User {
+  id           String     @id @default(cuid())
+  phone        String     @unique
+  email        String?    @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole   @default(CUSTOMER)
+  status       UserStatus @default(ACTIVE)
+
+  // Multi-hub: Optional hub assignment for staff
+  hubId String?
+  hub   Hub?    @relation(fields: [hubId], references: [id])
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  // Relations
+  driver                Driver?
+  shipmentsAsCustomer   Shipment[]      @relation("CustomerShipments")
+  referralsGiven        Referral[]      @relation("ReferrerReferrals")
+  referralReceived      Referral?       @relation("RefereeReferral")
+  shipmentEventsCreated ShipmentEvent[] @relation("ShipmentEventCreator")
+
+  // Shop & Ship relations
+  purchaseRequests    PurchaseRequest[]           @relation("UserPurchaseRequests")
+  confirmedRequests   PurchaseRequest[]           @relation("UserConfirmedRequests")
+  purchaseAdjustments PurchaseRequestAdjustment[] @relation("UserAdjustments")
+  receivedOrders      SupplierOrder[]             @relation("UserReceivedOrders")
+  ownedBatches        ConsolidationBatch[]        @relation("UserOwnedBatches")
+  createdBatches      ConsolidationBatch[]        @relation("UserCreatedBatches")
+  approvedBatches     ConsolidationBatch[]        @relation("UserApprovedBatches")
+
+  // Dispatch relations
+  routePlansCreated  RoutePlan[] @relation("RoutePlanCreator")
+  routePlansApproved RoutePlan[] @relation("RoutePlanApprover")
+
+  @@index([phone])
+  @@index([email])
+  @@index([hubId])
+  @@index([role, status])
+  @@map("users")
+}
+
+// ==================================================
+// HUB AGGREGATE
+// ==================================================
+
+model Hub {
+  id     String    @id @default(cuid())
+  code   String    @unique
+  name   String
+  status HubStatus @default(DRAFT)
+
+  // Location
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  region       String
+  country      String  @default("CI")
+  postalCode   String?
+  latitude     Decimal @db.Decimal(10, 8)
+  longitude    Decimal @db.Decimal(11, 8)
+
+  // Operations
+  timezone         String @default("Africa/Abidjan")
+  openingTime      String @default("08:00")
+  closingTime      String @default("18:00")
+  maxDailyCapacity Int    @default(100)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  activatedAt DateTime?
+  closedAt    DateTime?
+
+  // Relations
+  users               User[]
+  drivers             Driver[]
+  routesAsOrigin      Route[]  @relation("OriginHub")
+  routesAsDestination Route[]  @relation("DestinationHub")
+
+  // Shop & Ship relations
+  sourceRequests       PurchaseRequest[]    @relation("HubSourceRequests")
+  destinationRequests  PurchaseRequest[]    @relation("HubDestinationRequests")
+  receivingOrders      SupplierOrder[]      @relation("HubReceivingOrders")
+  consolidationBatches ConsolidationBatch[] @relation("HubConsolidationBatches")
+  destinationBatches   ConsolidationBatch[] @relation("HubDestinationBatches")
+
+  // Dispatch relations
+  vehicles   Vehicle[]
+  routePlans RoutePlan[]
+
+  @@index([code])
+  @@index([status])
+  @@index([country, region])
+  @@map("hubs")
+}
+
+// ==================================================
+// ROUTE & PRICING AGGREGATE
+// ==================================================
+
+model Route {
+  id     String      @id @default(cuid())
+  code   String      @unique
+  status RouteStatus @default(DRAFT)
+
+  // Hub references (unidirectional: A→B ≠ B→A)
+  originHubId      String
+  originHub        Hub    @relation("OriginHub", fields: [originHubId], references: [id])
+  destinationHubId String
+  destinationHub   Hub    @relation("DestinationHub", fields: [destinationHubId], references: [id])
+
+  // Logistics
+  distanceKm      Decimal @db.Decimal(10, 2)
+  durationMinutes Int
+  description     String?
+
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  activatedAt  DateTime?
+  deprecatedAt DateTime?
+
+  // Relations
+  pricingRules  PricingRule[]
+  shipments     Shipment[]
+  dispatchTasks DispatchTask[]
+
+  @@unique([originHubId, destinationHubId])
+  @@index([originHubId])
+  @@index([destinationHubId])
+  @@index([status])
+  @@map("routes")
+}
+
+model PricingRule {
+  id     String            @id @default(cuid())
+  status PricingRuleStatus @default(DRAFT)
+
+  // Versioning (immutable once ACTIVE)
+  version Int
+  routeId String
+  route   Route  @relation(fields: [routeId], references: [id])
+
+  // Pricing formula
+  basePriceXof    Decimal @db.Decimal(12, 2)
+  pricePerKg      Decimal @db.Decimal(10, 2)
+  pricePerCm3     Decimal @db.Decimal(10, 6)
+  minimumPriceXof Decimal @default(500) @db.Decimal(12, 2)
+  maximumWeightKg Decimal @default(10000) @db.Decimal(10, 2)
+
+  // Validity period
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  // Audit
+  createdAt   DateTime @default(now())
+  createdById String
+
+  // Relations
+  quotes Quote[]
+
+  @@unique([routeId, version])
+  @@index([routeId, status])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("pricing_rules")
+}
+
+// ==================================================
+// SHIPMENT AGGREGATE
+// ==================================================
+
+model Shipment {
+  id           String         @id @default(cuid())
+  trackingCode String         @unique
+  status       ShipmentStatus @default(DRAFT)
+
+  // Customer
+  customerId String
+  customer   User   @relation("CustomerShipments", fields: [customerId], references: [id])
+
+  // Route
+  routeId String
+  route   Route  @relation(fields: [routeId], references: [id])
+
+  // Origin address
+  originAddressLine1 String
+  originAddressLine2 String?
+  originCity         String
+  originPhone        String
+  originContactName  String
+
+  // Destination address
+  destAddressLine1 String
+  destAddressLine2 String?
+  destCity         String
+  destPhone        String
+  destContactName  String
+
+  // Package details
+  packageDescription String
+  declaredWeightKg   Decimal? @db.Decimal(10, 2)
+  isFragile          Boolean  @default(false)
+  requiresSignature  Boolean  @default(true)
+
+  // Analytics tracking
+  leadSource LeadSource @default(UNKNOWN)
+
+  // Timestamps
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  quotedAt           DateTime?
+  confirmedAt        DateTime?
+  pickedUpAt         DateTime?
+  inTransitAt        DateTime?
+  outForDeliveryAt   DateTime?
+  deliveredAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  // Relations (owned by Shipment aggregate)
+  quote         Quote?
+  scanResult    ScanResult?
+  scanRequests  ScanRequest[]
+  payment       Payment?
+  dispatchTasks DispatchTaskShipment[]
+  events        ShipmentEvent[]
+
+  // Shop & Ship (inverse)
+  consolidationBatch ConsolidationBatch?
+
+  // Dispatch relations
+  shipmentDeliveries ShipmentDelivery[]
+
+  @@index([trackingCode])
+  @@index([customerId])
+  @@index([routeId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("shipments")
+}
+
+// Append-only event log for shipment state transitions
+model ShipmentEvent {
+  id String @id @default(cuid())
+
+  // Shipment reference
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  // State transition
+  fromStatus ShipmentStatus?
+  toStatus   ShipmentStatus
+
+  // Metadata
+  reason   String?
+  metadata Json?
+  hubId    String? // Hub where event occurred
+
+  // Audit
+  createdById String?
+  createdBy   User?    @relation("ShipmentEventCreator", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([shipmentId])
+  @@index([createdAt])
+  @@map("shipment_events")
+}
+
+model Quote {
+  id     String      @id @default(cuid())
+  status QuoteStatus @default(PENDING)
+
+  // Shipment (1:1)
+  shipmentId String   @unique
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  // Pricing snapshot (immutability: reference to exact version)
+  pricingRuleId String
+  pricingRule   PricingRule @relation(fields: [pricingRuleId], references: [id])
+
+  // Dimensions used for calculation
+  lengthCm  Decimal @db.Decimal(10, 2)
+  widthCm   Decimal @db.Decimal(10, 2)
+  heightCm  Decimal @db.Decimal(10, 2)
+  volumeCm3 Decimal @db.Decimal(15, 2)
+
+  // Weight for billing (payable = max(real, volumetric))
+  declaredWeightKg   Decimal?     @db.Decimal(10, 3) // Poids déclaré par utilisateur
+  realWeightKg       Decimal?     @db.Decimal(10, 3) // Poids réel mesuré
+  volumetricWeightKg Decimal      @db.Decimal(10, 3) // volume / 5000
+  payableWeightKg    Decimal      @db.Decimal(10, 3) // max(real, volumetric)
+  weightSource       WeightSource @default(DECLARED)
+
+  // Legacy field (deprecated, use payableWeightKg)
+  weightKg Decimal @db.Decimal(10, 2)
+
+  // Price breakdown (immutable after ACCEPTED)
+  basePriceXof   Decimal @db.Decimal(12, 2)
+  weightPriceXof Decimal @db.Decimal(12, 2)
+  volumePriceXof Decimal @db.Decimal(12, 2)
+  totalPriceXof  Decimal @db.Decimal(12, 2)
+
+  // Validity
+  validUntil DateTime
+  acceptedAt DateTime?
+  expiredAt  DateTime?
+
+  // Immutability lock
+  isLocked     Boolean   @default(false)
+  lockedAt     DateTime?
+  lockedReason String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shipmentId])
+  @@index([pricingRuleId])
+  @@index([status])
+  @@index([validUntil])
+  @@index([isLocked])
+  @@map("quotes")
+}
+
+model ScanResult {
+  id     String     @id @default(cuid())
+  status ScanStatus @default(PROCESSING)
+
+  // Shipment (1:1)
+  shipmentId String   @unique
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  // Source (AI or MANUAL)
+  source String @default("AI")
+
+  // Input reference (A4 = 210x297mm)
+  inputImageHash    String
+  referenceObject   String @default("A4")
+  referenceWidthMm  Int    @default(210)
+  referenceHeightMm Int    @default(297)
+
+  // AI output (or user-declared for manual)
+  detectedLengthCm         Decimal? @db.Decimal(10, 2)
+  detectedWidthCm          Decimal? @db.Decimal(10, 2)
+  detectedHeightCm         Decimal? @db.Decimal(10, 2)
+  detectedWeightKg         Decimal? @db.Decimal(10, 2)
+  confidenceScore          Decimal? @db.Decimal(5, 4)
+  requiresManualValidation Boolean  @default(false)
+
+  // Model traceability
+  modelName        String @default("volumescan")
+  modelVersion     String
+  processingTimeMs Int?
+
+  // Manual validation
+  validatedLengthCm Decimal?  @db.Decimal(10, 2)
+  validatedWidthCm  Decimal?  @db.Decimal(10, 2)
+  validatedHeightCm Decimal?  @db.Decimal(10, 2)
+  validatedWeightKg Decimal?  @db.Decimal(10, 2)
+  validatedById     String?
+  validatedAt       DateTime?
+  validationNotes   String?
+
+  // Traceability (added for async orchestration)
+  quoteId            String?
+  requestedById      String?
+  hubId              String?
+  pricingRuleVersion Int?
+  rawAiOutput        Json?
+
+  // Request link (for async flow)
+  scanRequest ScanRequest?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([shipmentId])
+  @@index([status])
+  @@index([source])
+  @@index([modelVersion])
+  @@index([quoteId])
+  @@map("scan_results")
+}
+
+// ==================================================
+// SCAN REQUEST (Async Queue)
+// ==================================================
+
+model ScanRequest {
+  id String @id @default(cuid())
+
+  // Shipment link
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+
+  // Request data
+  imageUrl        String // S3/Minio URL
+  referenceObject String  @default("A4")
+  requestedById   String?
+  hubId           String?
+
+  // Processing state
+  status      ScanRequestStatus @default(PENDING)
+  jobId       String?           @unique // BullMQ job ID for dedup
+  attempts    Int               @default(0)
+  maxAttempts Int               @default(3)
+  lastError   String?
+
+  // Result link
+  scanResultId String?     @unique
+  scanResult   ScanResult? @relation(fields: [scanResultId], references: [id])
+
+  // Raw AI output (for traceability)
+  rawAiOutput Json?
+
+  // Timestamps
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  processingStartedAt DateTime?
+  completedAt         DateTime?
+
+  @@index([status])
+  @@index([shipmentId])
+  @@index([jobId])
+  @@map("scan_requests")
+}
+
+model Payment {
+  id     String        @id @default(cuid())
+  status PaymentStatus @default(INITIATED)
+  method PaymentMethod
+
+  // Shipment (1:1)
+  shipmentId String   @unique
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  // Quote reference (auditability)
+  quoteId String?
+
+  // Amount (locked at creation, must equal Quote.totalPriceXof)
+  amountXof    Decimal @db.Decimal(12, 2)
+  currencyCode String  @default("XOF")
+
+  // Provider
+  provider         PaymentProvider?
+  gatewayReference String? // ID côté provider
+  gatewayResponse  Json? // Réponse brute provider
+
+  // Payment link
+  paymentUrl String?
+  expiresAt  DateTime?
+
+  // Idempotency
+  idempotencyKey String? @unique
+
+  // Webhook tracking
+  lastWebhookAt DateTime?
+  webhookCount  Int       @default(0)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  initiatedAt   DateTime?
+  processingAt  DateTime?
+  confirmedAt   DateTime?
+  failedAt      DateTime?
+  failureReason String?
+  refundedAt    DateTime?
+  refundReason  String?
+
+  // Audit events
+  events PaymentEvent[]
+
+  // Financial ledger entries (immutable audit trail)
+  ledgerEntries FinancialLedgerEntry[]
+
+  @@index([shipmentId])
+  @@index([quoteId])
+  @@index([status])
+  @@index([gatewayReference])
+  @@index([idempotencyKey])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model PaymentEvent {
+  id String @id @default(cuid())
+
+  // Payment reference
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  // Event details
+  eventType String // initiated, webhook_received, confirmed, failed, expired
+  eventData Json // Raw event data
+  source    String // api, webhook, manual, cron
+
+  createdAt DateTime @default(now())
+
+  @@index([paymentId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("payment_events")
+}
+
+// ==================================================
+// FINANCIAL LEDGER (Append-only, Immutable)
+// ==================================================
+
+model FinancialLedgerEntry {
+  id String @id @default(cuid())
+
+  // Entry type (CREDIT = payment, DEBIT = refund/compensation)
+  entryType LedgerEntryType
+
+  // Amount (always positive, sign determined by entryType)
+  amountXof    Decimal @db.Decimal(12, 2)
+  currencyCode String  @default("XOF")
+
+  // === Audit Trail References ===
+
+  // Payment link (required)
+  paymentId String
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
+  // Quote reference
+  quoteId String?
+
+  // Shipment reference
+  shipmentId String
+
+  // Pricing rule snapshot (version at time of payment)
+  pricingRuleId      String?
+  pricingRuleVersion Int?
+
+  // Scan result reference (if volumetric pricing used)
+  scanResultId String?
+
+  // === Provider Reconciliation ===
+  providerReference String? // Gateway transaction ID
+  providerName      String? // CINETPAY, STRIPE, etc.
+
+  // === Compensating Entry Support ===
+  // If this entry is a correction, links to the original
+  compensatesEntryId String?
+  compensationReason String?
+
+  // === Immutability ===
+  // No updatedAt! Entries are append-only.
+  createdAt DateTime @default(now())
+
+  @@index([paymentId])
+  @@index([shipmentId])
+  @@index([quoteId])
+  @@index([createdAt])
+  @@index([entryType])
+  @@index([providerReference])
+  @@map("financial_ledger_entries")
+}
+
+// ==================================================
+// DRIVER AGGREGATE
+// ==================================================
+
+model Driver {
+  id     String       @id @default(cuid())
+  status DriverStatus @default(ONBOARDING)
+
+  // User (1:1)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Hub assignment
+  hubId String
+  hub   Hub    @relation(fields: [hubId], references: [id])
+
+  // Vehicle
+  vehicleType       String
+  vehiclePlate      String
+  vehicleCapacityKg Decimal @db.Decimal(10, 2)
+
+  // Availability
+  isAvailable     Boolean   @default(false)
+  lastLocationLat Decimal?  @db.Decimal(10, 8)
+  lastLocationLng Decimal?  @db.Decimal(11, 8)
+  lastLocationAt  DateTime?
+
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  activatedAt  DateTime?
+  terminatedAt DateTime?
+
+  // Relations
+  dispatchTasks DispatchTask[]
+  routePlans    RoutePlan[]
+
+  @@index([userId])
+  @@index([hubId])
+  @@index([status, isAvailable])
+  @@map("drivers")
+}
+
+// ==================================================
+// DISPATCH AGGREGATE
+// ==================================================
+
+model DispatchTask {
+  id     String             @id @default(cuid())
+  status DispatchTaskStatus @default(ASSIGNED)
+
+  // Driver
+  driverId String
+  driver   Driver @relation(fields: [driverId], references: [id])
+
+  // Route constraint (all shipments must share this route)
+  routeId String
+  route   Route  @relation(fields: [routeId], references: [id])
+
+  // Timestamps
+  assignedAt        DateTime  @default(now())
+  enRoutePickupAt   DateTime?
+  pickedUpAt        DateTime?
+  enRouteDeliveryAt DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  failureReason     String?
+
+  // Proof of delivery
+  proofSignatureHash String?
+  proofPhotoHash     String?
+  recipientName      String?
+
+  // Relations
+  shipments DispatchTaskShipment[]
+
+  // Optional link to RoutePlan
+  routePlanId String?
+  routePlan   RoutePlan? @relation("RoutePlanTasks", fields: [routePlanId], references: [id])
+
+  // Dispatch deliveries
+  deliveries ShipmentDelivery[] @relation("TaskDeliveries")
+
+  @@index([driverId])
+  @@index([routeId])
+  @@index([status])
+  @@index([assignedAt])
+  @@map("dispatch_tasks")
+}
+
+model DispatchTaskShipment {
+  id             String       @id @default(cuid())
+  dispatchTaskId String
+  dispatchTask   DispatchTask @relation(fields: [dispatchTaskId], references: [id], onDelete: Cascade)
+  shipmentId     String
+  shipment       Shipment     @relation(fields: [shipmentId], references: [id])
+
+  // Order in the task
+  sequenceOrder Int
+
+  @@unique([dispatchTaskId, shipmentId])
+  @@index([dispatchTaskId])
+  @@index([shipmentId])
+  @@map("dispatch_task_shipments")
+}
+
+// ==================================================
+// REFERRAL AGGREGATE
+// ==================================================
+
+model Referral {
+  id     String         @id @default(cuid())
+  status ReferralStatus @default(CREATED)
+  code   String         @unique
+
+  // Referrer (User who shared the code)
+  referrerId String
+  referrer   User   @relation("ReferrerReferrals", fields: [referrerId], references: [id])
+
+  // Referee (User who used the code) - 1:1, one user can only be referred once
+  refereeId String? @unique
+  referee   User?   @relation("RefereeReferral", fields: [refereeId], references: [id])
+
+  // Conversion tracking
+  convertedAt          DateTime?
+  conversionShipmentId String?
+
+  // Reward
+  rewardedAt        DateTime?
+  referrerRewardXof Decimal?  @db.Decimal(12, 2)
+  refereeRewardXof  Decimal?  @db.Decimal(12, 2)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([code])
+  @@index([referrerId])
+  @@index([refereeId])
+  @@index([status])
+  @@map("referrals")
+}
+
+// ==================================================
+// WHATSAPP SESSION (for FSM persistence)
+// ==================================================
+
+model WhatsAppSession {
+  id          String        @id @default(cuid())
+  phoneNumber String        @unique
+  state       WhatsAppState @default(INIT)
+  stateData   Json          @default("{}")
+
+  // Associated entities
+  userId            String?
+  currentShipmentId String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+
+  @@index([phoneNumber])
+  @@index([state])
+  @@index([expiresAt])
+  @@map("whatsapp_sessions")
+}
+
+// ==================================================
+// WHATSAPP AUDIT LOG (message traceability)
+// ==================================================
+
+model WhatsAppAuditLog {
+  id               String  @id @default(cuid())
+  phoneNumber      String
+  direction        String // INBOUND or OUTBOUND
+  messageType      String // text, image, interactive, etc.
+  messageId        String  @unique // WhatsApp message ID for dedup
+  state            String // WhatsApp state at time of message
+  payload          Json? // Message content (sanitized)
+  errorMessage     String? // If processing failed
+  processingTimeMs Int? // How long to process
+
+  // Timestamps
+  timestamp DateTime @default(now())
+
+  @@index([phoneNumber])
+  @@index([messageId])
+  @@index([timestamp])
+  @@index([direction])
+  @@map("whatsapp_audit_logs")
+}
+
+// ==================================================
+// WHATSAPP IDEMPOTENCY (for Redis migration)
+// ==================================================
+
+model WhatsAppIdempotency {
+  id          String   @id @default(cuid())
+  messageId   String   @unique // WhatsApp message ID
+  processedAt DateTime @default(now())
+  expiresAt   DateTime // For cleanup job
+
+  @@index([messageId])
+  @@index([expiresAt])
+  @@map("whatsapp_idempotency")
+}
+
+// ==================================================
+// SHOP & SHIP AGGREGATE
+// ==================================================
+
+model Supplier {
+  id          String  @id @default(cuid())
+  name        String
+  country     String  @default("CI")
+  currency    String  @default("XOF")
+  website     String?
+  contactInfo Json?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  supplierOrders SupplierOrder[]
+
+  @@index([country])
+  @@index([isActive])
+  @@map("suppliers")
+}
+
+model PurchaseRequest {
+  id     String                @id @default(cuid())
+  status PurchaseRequestStatus @default(SUBMITTED)
+
+  // Owner
+  userId String
+  user   User   @relation("UserPurchaseRequests", fields: [userId], references: [id])
+
+  // Item details
+  itemDescription String
+  itemUrl         String?
+  quantity        Int     @default(1)
+  productOptions  Json? // Color, size, variant, etc.
+  notes           String?
+
+  // Source (where to buy from)
+  sourceRegion String  @default("CHINA") // CHINA, EUROPE, USA
+  sourceHubId  String?
+  sourceHub    Hub?    @relation("HubSourceRequests", fields: [sourceHubId], references: [id])
+
+  // Destination (where to ship to)
+  destinationHubId String
+  destinationHub   Hub    @relation("HubDestinationRequests", fields: [destinationHubId], references: [id])
+
+  // Pricing (immutable after APPROVED)
+  declaredPriceXof  Decimal? @db.Decimal(12, 2)
+  estimatedPriceXof Decimal? @db.Decimal(12, 2)
+  pricingSnapshot   Json? // Frozen at approval: { productCost, serviceFee, logisticsCost, total }
+
+  // Confirmation
+  confirmedById String?
+  confirmedBy   User?   @relation("UserConfirmedRequests", fields: [confirmedById], references: [id])
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  quotedAt    DateTime?
+  approvedAt  DateTime?
+  completedAt DateTime?
+
+  // Relations
+  supplierOrders SupplierOrder[]
+  serviceFees    ServiceFee[]
+  adjustments    PurchaseRequestAdjustment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([sourceRegion])
+  @@index([destinationHubId])
+  @@index([createdAt])
+  @@map("purchase_requests")
+}
+
+model SupplierOrder {
+  id     String              @id @default(cuid())
+  status SupplierOrderStatus @default(DRAFT)
+
+  // Parent request
+  purchaseRequestId String
+  purchaseRequest   PurchaseRequest @relation(fields: [purchaseRequestId], references: [id])
+
+  // Supplier
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  // Order details
+  orderReference   String? // Supplier's order ID
+  invoiceReference String? // Supplier invoice number
+  itemCostXof      Decimal  @db.Decimal(12, 2)
+  shippingCostXof  Decimal? @db.Decimal(12, 2)
+  trackingNumber   String?
+  expectedQuantity Int      @default(1)
+
+  // Receiving hub
+  receivingHubId String
+  receivingHub   Hub    @relation("HubReceivingOrders", fields: [receivingHubId], references: [id])
+
+  // Reception metadata (filled on RECEIVED)
+  receivedAt         DateTime?
+  receivedById       String?
+  receivedBy         User?     @relation("UserReceivedOrders", fields: [receivedById], references: [id])
+  receivedQuantity   Int?
+  receptionPhotos    Json? // Array of photo URLs
+  receptionCondition String? // GOOD, DAMAGED, PARTIAL
+  receptionNotes     String?
+
+  // Exception handling
+  exceptionType         SupplierOrderExceptionType?
+  exceptionNotes        String?
+  exceptionReportedAt   DateTime?
+  exceptionResolvedAt   DateTime?
+  exceptionResolvedById String?
+  exceptionResolution   String?
+
+  // Consolidation
+  consolidationBatchId String?
+  consolidationBatch   ConsolidationBatch? @relation(fields: [consolidationBatchId], references: [id])
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  placedAt  DateTime?
+  shippedAt DateTime?
+
+  @@index([purchaseRequestId])
+  @@index([supplierId])
+  @@index([status])
+  @@index([receivingHubId])
+  @@index([consolidationBatchId])
+  @@index([exceptionType])
+  @@map("supplier_orders")
+}
+
+model ConsolidationBatch {
+  id     String                   @id @default(cuid())
+  status ConsolidationBatchStatus @default(OPEN)
+
+  // Source hub where consolidation happens
+  hubId String
+  hub   Hub    @relation("HubConsolidationBatches", fields: [hubId], references: [id])
+
+  // Destination hub (all items in batch go here)
+  destinationHubId String
+  destinationHub   Hub    @relation("HubDestinationBatches", fields: [destinationHubId], references: [id])
+
+  // User who owns this batch (customer)
+  userId String
+  user   User   @relation("UserOwnedBatches", fields: [userId], references: [id])
+
+  // Created by (hub staff)
+  createdById String
+  createdBy   User   @relation("UserCreatedBatches", fields: [createdById], references: [id])
+
+  // Approval (required before shipment creation)
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?     @relation("UserApprovedBatches", fields: [approvedById], references: [id])
+
+  // Repackaging options
+  repackaged       Boolean @default(false)
+  repackagingNotes String?
+  itemsRemoved     Json? // Details of items removed/held
+
+  // Resulting shipment
+  shipmentId String?   @unique
+  shipment   Shipment? @relation(fields: [shipmentId], references: [id])
+
+  // Consolidation data
+  totalWeightKg Decimal? @db.Decimal(10, 3)
+  totalVolumeM3 Decimal? @db.Decimal(10, 6)
+  itemCount     Int?
+  notes         String?
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+  packedAt  DateTime?
+
+  // Relations
+  supplierOrders SupplierOrder[]
+
+  @@index([hubId])
+  @@index([destinationHubId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("consolidation_batches")
+}
+
+model ServiceFee {
+  id          String         @id @default(cuid())
+  feeType     ServiceFeeType
+  amountXof   Decimal        @db.Decimal(12, 2)
+  description String?
+
+  // Parent
+  purchaseRequestId String
+  purchaseRequest   PurchaseRequest @relation(fields: [purchaseRequestId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([purchaseRequestId])
+  @@index([feeType])
+  @@map("service_fees")
+}
+
+// Admin adjustments for PurchaseRequest (audited)
+model PurchaseRequestAdjustment {
+  id String @id @default(cuid())
+
+  // Parent
+  purchaseRequestId String
+  purchaseRequest   PurchaseRequest @relation(fields: [purchaseRequestId], references: [id])
+
+  // What changed
+  fieldName     String // e.g. "estimatedPriceXof", "quantity"
+  previousValue String?
+  newValue      String
+  reason        String // Required for audit
+
+  // Who adjusted
+  adjustedById String
+  adjustedBy   User   @relation("UserAdjustments", fields: [adjustedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([purchaseRequestId])
+  @@index([adjustedById])
+  @@map("purchase_request_adjustments")
+}
+
+// ==================================================
+// AUDIT LOG
+// ==================================================
+
+model AuditLog {
+  id              String   @id @default(cuid())
+  entityType      String
+  entityId        String
+  action          String
+  performedById   String?
+  performedByRole String?
+  changes         Json?
+  ipAddress       String?
+  userAgent       String?
+  timestamp       DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([performedById])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+// ==================================================
+// LAST-MILE DISPATCH DOMAIN
+// ==================================================
+
+enum VehicleType {
+  MOTO // Motorcycle, 30kg max, narrow streets
+  TRICYCLE // 3-wheel, 150kg, informal areas
+  VAN // 500kg+, formal roads only
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+enum RoutePlanStatus {
+  DRAFT // Tasks being added
+  APPROVED // Ready for execution
+  IN_PROGRESS // Driver executing
+  COMPLETED // All tasks terminal
+  CANCELLED // Cancelled before start
+}
+
+enum ShipmentDeliveryStatus {
+  PENDING_PICKUP // Awaiting driver pickup at hub
+  IN_TRANSIT // On vehicle, moving
+  DELIVERY_ATTEMPT // Driver at door
+  DELIVERED // Complete (terminal)
+  PENDING_RETRY // Failed, will retry
+  RETURNED_TO_HUB // All attempts exhausted
+  EXCEPTION // Requires intervention (terminal)
+}
+
+enum DeliveryProofType {
+  SIGNATURE // Digital signature
+  PHOTO // Photo of package at location
+  OTP // One-time password verified
+  RECIPIENT_ABSENT // Left with guard/neighbor
+}
+
+model Vehicle {
+  id          String        @id @default(cuid())
+  plateNumber String        @unique
+  type        VehicleType
+  status      VehicleStatus @default(AVAILABLE)
+
+  // Capacity
+  capacityKg Decimal  @db.Decimal(10, 2)
+  capacityM3 Decimal? @db.Decimal(10, 4)
+  fuelType   String? // petrol, diesel, electric
+
+  // Current assignment
+  currentDriverId String?
+  currentHubId    String
+  currentHub      Hub     @relation(fields: [currentHubId], references: [id])
+
+  // Maintenance
+  lastMaintenanceAt DateTime?
+  nextMaintenanceAt DateTime?
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  retiredAt DateTime?
+
+  // Relations
+  routePlans RoutePlan[]
+
+  @@index([status])
+  @@index([currentHubId])
+  @@index([type, status])
+  @@map("vehicles")
+}
+
+model RoutePlan {
+  id       String          @id @default(cuid())
+  status   RoutePlanStatus @default(DRAFT)
+  planDate DateTime        @db.Date
+
+  // Assignment
+  driverId  String
+  driver    Driver  @relation(fields: [driverId], references: [id])
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  hubId     String
+  hub       Hub     @relation(fields: [hubId], references: [id])
+
+  // Execution
+  startedAt      DateTime?
+  completedAt    DateTime?
+  totalTasks     Int       @default(0)
+  completedTasks Int       @default(0)
+  totalKm        Decimal?  @db.Decimal(10, 2)
+
+  // Admin
+  createdById  String
+  createdBy    User      @relation("RoutePlanCreator", fields: [createdById], references: [id])
+  approvedById String?
+  approvedBy   User?     @relation("RoutePlanApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  dispatchTasks DispatchTask[] @relation("RoutePlanTasks")
+
+  @@unique([driverId, planDate])
+  @@index([driverId])
+  @@index([vehicleId])
+  @@index([hubId])
+  @@index([status, planDate])
+  @@map("route_plans")
+}
+
+model ShipmentDelivery {
+  id     String                 @id @default(cuid())
+  status ShipmentDeliveryStatus @default(PENDING_PICKUP)
+
+  // References
+  shipmentId     String
+  shipment       Shipment     @relation(fields: [shipmentId], references: [id])
+  dispatchTaskId String
+  dispatchTask   DispatchTask @relation("TaskDeliveries", fields: [dispatchTaskId], references: [id])
+
+  // Timestamps
+  pickedUpAt    DateTime?
+  deliveredAt   DateTime?
+  attemptCount  Int       @default(0)
+  lastAttemptAt DateTime?
+  failureReason String?
+
+  // Proof
+  deliveryProofId String?        @unique
+  deliveryProof   DeliveryProof?
+  recipientName   String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shipmentId, dispatchTaskId])
+  @@index([shipmentId])
+  @@index([dispatchTaskId])
+  @@index([status])
+  @@map("shipment_deliveries")
+}
+
+model DeliveryProof {
+  id        String            @id @default(cuid())
+  proofType DeliveryProofType
+
+  // Evidence
+  photoUrls    Json? // Array of photo URLs
+  signatureUrl String? // Signature image URL
+  otpCode      String? // OTP if used
+
+  // Location (GPS)
+  capturedLat Decimal  @db.Decimal(10, 8)
+  capturedLng Decimal  @db.Decimal(11, 8)
+  capturedAt  DateTime @default(now())
+
+  // Recipient
+  recipientName String
+  notes         String?
+
+  // Reference
+  shipmentDeliveryId String           @unique
+  shipmentDelivery   ShipmentDelivery @relation(fields: [shipmentDeliveryId], references: [id])
+
+  // Immutable
+  createdAt DateTime @default(now())
+
+  @@index([shipmentDeliveryId])
+  @@map("delivery_proofs")
+}
+
+// ==================================================
+// ANALYTICS: ROUTE COST ENTRIES
+// ==================================================
+
+model RouteCostEntry {
+  id String @id @default(cuid())
+
+  // Route reference
+  routeId String
+
+  // Cost classification
+  costType RouteCostType
+
+  // Amount
+  amountXof    Decimal @db.Decimal(12, 2)
+  currencyCode String  @default("XOF")
+
+  // Period this cost applies to
+  periodStart DateTime
+  periodEnd   DateTime
+
+  // Context
+  description   String?
+  shipmentCount Int? // If cost attributed to specific shipment batch
+
+  // Audit
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  @@index([routeId])
+  @@index([costType])
+  @@index([periodStart, periodEnd])
+  @@map("route_cost_entries")
+}
+
+// ==================================================
+// ANALYTICS: PERFORMANCE SNAPSHOTS (Read-Only Aggregates)
+// ==================================================
+
+/// Daily route performance aggregation
+model RoutePerformanceSnapshot {
+  id String @id @default(cuid())
+
+  // Dimensions
+  routeId   String
+  periodDay DateTime @db.Date
+
+  // Revenue metrics
+  shipmentCount Int
+  revenueXof    Decimal @db.Decimal(15, 2)
+  refundsXof    Decimal @default(0) @db.Decimal(15, 2)
+  netRevenueXof Decimal @db.Decimal(15, 2)
+
+  // Cost metrics (from RouteCostEntry)
+  totalCostXof   Decimal @default(0) @db.Decimal(15, 2)
+  grossMarginXof Decimal @default(0) @db.Decimal(15, 2)
+  marginPercent  Decimal @default(0) @db.Decimal(5, 2)
+
+  // Margin transparency
+  isMarginComplete Boolean @default(false) // True if all critical costs are available
+  costAssumptions  Json?                   // Array of assumptions used in calculation
+
+  // Weight metrics
+  totalPayableWeightKg    Decimal @db.Decimal(12, 2)
+  totalVolumetricWeightKg Decimal @db.Decimal(12, 2)
+  avgDeliveryDays         Decimal @default(0) @db.Decimal(5, 2)
+
+  // Audit
+  computedAt DateTime @default(now())
+
+  @@unique([routeId, periodDay])
+  @@index([routeId])
+  @@index([periodDay])
+  @@map("route_performance_snapshots")
+}
+
+/// Daily hub performance aggregation
+model HubPerformanceSnapshot {
+  id String @id @default(cuid())
+
+  // Dimensions
+  hubId     String
+  periodDay DateTime @db.Date
+
+  // Volume metrics
+  shipmentsOriginated Int @default(0)
+  shipmentsReceived   Int @default(0)
+  shipmentsThroughput Int @default(0)
+
+  // Scan metrics
+  scanCount             Int     @default(0)
+  avgScanConfidence     Decimal @default(0) @db.Decimal(5, 4)
+  manualValidationCount Int     @default(0)
+  manualValidationRate  Decimal @default(0) @db.Decimal(5, 4)
+
+  // Driver metrics
+  activeDriverCount   Int @default(0)
+  completedDeliveries Int @default(0)
+  failedDeliveries    Int @default(0)
+
+  // Financial metrics (50/50 allocation from routes)
+  revenueXof       Decimal @default(0) @db.Decimal(15, 2)
+  costXof          Decimal @default(0) @db.Decimal(15, 2)
+  marginXof        Decimal @default(0) @db.Decimal(15, 2)
+  isMarginComplete Boolean @default(false)
+
+  // Audit
+  computedAt DateTime @default(now())
+
+  @@unique([hubId, periodDay])
+  @@index([hubId])
+  @@index([periodDay])
+  @@map("hub_performance_snapshots")
+}
+
+/// Daily volume/weight delta metrics
+model VolumeMetricsSnapshot {
+  id String @id @default(cuid())
+
+  // Dimensions
+  routeId   String
+  periodDay DateTime @db.Date
+
+  // Sample size
+  shipmentCount Int
+
+  // Weight comparisons
+  totalDeclaredWeightKg   Decimal @db.Decimal(12, 2)
+  totalRealWeightKg       Decimal @db.Decimal(12, 2)
+  totalVolumetricWeightKg Decimal @db.Decimal(12, 2)
+  totalPayableWeightKg    Decimal @db.Decimal(12, 2)
+
+  // Delta analysis
+  avgVolumetricDeltaKg      Decimal @db.Decimal(10, 2)
+  avgVolumetricDeltaPercent Decimal @db.Decimal(5, 2)
+  underDeclaredCount        Int     @default(0)
+
+  // Revenue impact
+  revenueUpliftXof Decimal @default(0) @db.Decimal(12, 2)
+
+  // Audit
+  computedAt DateTime @default(now())
+
+  @@unique([routeId, periodDay])
+  @@index([routeId])
+  @@index([periodDay])
+  @@map("volume_metrics_snapshots")
+}
+
+/// Daily lead source attribution
+model LeadSourceSnapshot {
+  id String @id @default(cuid())
+
+  // Dimensions
+  leadSource LeadSource
+  periodDay  DateTime   @db.Date
+
+  // Funnel metrics
+  leadsInitiated     Int @default(0)
+  quotesGenerated    Int @default(0)
+  shipmentsConfirmed Int @default(0)
+  paymentsCompleted  Int @default(0)
+
+  // Conversion rates
+  leadToQuoteRate       Decimal @default(0) @db.Decimal(5, 4)
+  quoteToShipmentRate   Decimal @default(0) @db.Decimal(5, 4)
+  overallConversionRate Decimal @default(0) @db.Decimal(5, 4)
+
+  // Revenue
+  totalRevenueXof Decimal @default(0) @db.Decimal(15, 2)
+
+  // Audit
+  computedAt DateTime @default(now())
+
+  @@unique([leadSource, periodDay])
+  @@index([leadSource])
+  @@index([periodDay])
+  @@map("lead_source_snapshots")
+}

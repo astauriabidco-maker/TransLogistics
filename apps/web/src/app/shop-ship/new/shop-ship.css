@@ -1,0 +1,24 @@
+/**
+ * Shop & Ship Styles
+ * Placeholder CSS for the Shop & Ship module
+ */
+
+.shop-ship-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.shop-ship-header {
+    margin-bottom: 2rem;
+}
+
+.shop-ship-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.shop-ship-header p {
+    color: #6b7280;
+}

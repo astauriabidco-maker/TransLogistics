@@ -1,0 +1,232 @@
+/**
+ * Quote Flow Page Styles
+ * 
+ * Minimal, mobile-friendly styles for the quote flow.
+ */
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Progress Steps */
+.steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xl);
+    padding: 0 var(--spacing-md);
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stepNumber {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 2px solid var(--color-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+}
+
+.stepNumber.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+.stepNumber.completed {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+}
+
+.stepLabel {
+    margin-top: var(--spacing-xs);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+/* Form Elements */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.required::after {
+    content: ' *';
+    color: var(--color-error);
+}
+
+.input,
+.select {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-secondary);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background: var(--color-background);
+    color: var(--color-text-primary);
+}
+
+.input:focus,
+.select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* Dimension Row */
+.dimensionRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-sm);
+}
+
+/* Buttons */
+.buttonGroup {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.button {
+    flex: 1;
+    padding: var(--spacing-md);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.buttonPrimary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.buttonPrimary:hover {
+    opacity: 0.9;
+}
+
+.buttonPrimary:disabled {
+    background: var(--color-secondary);
+    cursor: not-allowed;
+}
+
+.buttonSecondary {
+    background: transparent;
+    border: 1px solid var(--color-secondary);
+    color: var(--color-text-primary);
+}
+
+/* Quote Summary */
+.quoteSummary {
+    background: var(--color-surface);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+}
+
+.priceRow {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+    font-size: 0.875rem;
+}
+
+.priceRow:not(:last-child) {
+    border-bottom: 1px solid var(--color-secondary);
+}
+
+.priceTotal {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.priceAmount {
+    font-weight: 500;
+}
+
+.validity {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-secondary);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+/* Success State */
+.success {
+    text-align: center;
+    padding: var(--spacing-xl) 0;
+}
+
+.successIcon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.trackingCode {
+    background: var(--color-surface);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-family: monospace;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: var(--spacing-md) 0;
+}
+
+/* Error State */
+.error {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid var(--color-error);
+    color: var(--color-error);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--color-text-secondary);
+}
