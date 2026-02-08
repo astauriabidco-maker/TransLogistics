@@ -51,7 +51,7 @@ export class IdempotencyService {
         } catch (error) {
             // Ignore duplicate key errors (race condition)
             if ((error as { code?: string }).code === 'P2002') {
-                logger.debug('Duplicate idempotency key ignored', { messageId });
+                logger.debug({ messageId }, 'Duplicate idempotency key ignored');
                 return;
             }
             throw error;
@@ -70,9 +70,9 @@ export class IdempotencyService {
         });
 
         if (result.count > 0) {
-            logger.info('Cleaned up expired idempotency entries', {
+            logger.info({
                 count: result.count,
-            });
+            }, 'Cleaned up expired idempotency entries');
         }
 
         return result.count;

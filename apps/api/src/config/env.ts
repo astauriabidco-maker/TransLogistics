@@ -23,6 +23,11 @@ interface EnvConfig {
     AI_ENGINE_TIMEOUT_MS: number;
     AI_ENGINE_INTERNAL_KEY: string;
 
+    // Authentication
+    AUTH_JWT_SECRET: string;
+    AUTH_JWT_EXPIRY_SECONDS: number;
+    AUTH_REFRESH_TOKEN_EXPIRY_SECONDS: number;
+
     // Logging
     LOG_LEVEL: string;
 }
@@ -64,6 +69,11 @@ export const env: EnvConfig = {
     AI_ENGINE_URL: getEnvVar('AI_ENGINE_URL', 'http://localhost:8000'),
     AI_ENGINE_TIMEOUT_MS: getEnvVarAsInt('AI_ENGINE_TIMEOUT_MS', 30000),
     AI_ENGINE_INTERNAL_KEY: getEnvVar('AI_ENGINE_INTERNAL_KEY', 'dev-internal-key'),
+
+    // Authentication
+    AUTH_JWT_SECRET: getEnvVar('AUTH_JWT_SECRET', 'dev-jwt-secret-change-in-production'),
+    AUTH_JWT_EXPIRY_SECONDS: getEnvVarAsInt('AUTH_JWT_EXPIRY_SECONDS', 3600),
+    AUTH_REFRESH_TOKEN_EXPIRY_SECONDS: getEnvVarAsInt('AUTH_REFRESH_TOKEN_EXPIRY_SECONDS', 604800),
 
     // Logging
     LOG_LEVEL: getEnvVar('LOG_LEVEL', 'debug'),

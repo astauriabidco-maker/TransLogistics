@@ -1,0 +1,109 @@
+{
+    "common": {
+        "loading": "Chargement...",
+        "error": "Une erreur est survenue",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "delete": "Supprimer",
+        "edit": "Modifier",
+        "create": "Créer",
+        "search": "Rechercher",
+        "filter": "Filtrer",
+        "export": "Exporter",
+        "close": "Fermer",
+        "confirm": "Confirmer",
+        "back": "Retour",
+        "next": "Suivant",
+        "previous": "Précédent",
+        "noData": "Aucune donnée disponible",
+        "actions": "Actions",
+        "status": "Statut",
+        "date": "Date",
+        "total": "Total",
+        "yes": "Oui",
+        "no": "Non"
+    },
+    "nav": {
+        "dashboard": "Tableau de bord",
+        "shipments": "Envois",
+        "analytics": "Analytiques",
+        "autonomy": "Transparence Autonomie",
+        "hubs": "Hubs",
+        "routes": "Routes",
+        "pricing": "Tarification",
+        "dispatch": "Dispatch",
+        "shopShip": "Shop & Ship",
+        "settings": "Paramètres",
+        "users": "Utilisateurs",
+        "audit": "Journal d'audit"
+    },
+    "tracking": {
+        "title": "Suivi de votre envoi",
+        "subtitle": "Entrez votre numéro de suivi pour suivre votre colis en temps réel",
+        "placeholder": "Numéro de suivi (ex: TL-ABJ-DKR-2024001)",
+        "search": "Rechercher",
+        "status": "Statut actuel",
+        "origin": "Origine",
+        "destination": "Destination",
+        "created": "Date d'envoi",
+        "estimated": "Livraison estimée",
+        "lastUpdate": "Dernière mise à jour",
+        "timeline": "Historique",
+        "notFound": "Aucun envoi trouvé avec ce numéro de suivi",
+        "invalidCode": "Veuillez entrer un numéro de suivi valide"
+    },
+    "analytics": {
+        "title": "Analytiques",
+        "routeMargins": "Marges par Route",
+        "hubPerformance": "Performance des Hubs",
+        "volumeMetrics": "Métriques de Volume",
+        "leadSources": "Sources d'acquisition",
+        "summary": "Vue d'ensemble",
+        "export": {
+            "title": "Exporter",
+            "csv": "Télécharger CSV",
+            "pdf": "Télécharger PDF"
+        }
+    },
+    "autonomy": {
+        "title": "Transparence de l'Autonomie",
+        "overview": "Vue d'ensemble",
+        "actions": "Journal des Actions",
+        "promotion": {
+            "title": "Progression vers la promotion",
+            "eligible": "Éligible à la promotion",
+            "inProgress": "En cours de progression",
+            "atMax": "Niveau maximal atteint",
+            "promote": "Promouvoir",
+            "decisions": "Décisions",
+            "accuracy": "Précision",
+            "errorRate": "Taux d'erreur",
+            "history": "Historique des promotions"
+        },
+        "levels": {
+            "MANUAL": "Manuel",
+            "ASSISTED": "Assisté",
+            "SUPERVISED": "Supervisé",
+            "AUTONOMOUS": "Autonome"
+        }
+    },
+    "shipments": {
+        "title": "Gestion des Envois",
+        "tracking": "Numéro de suivi",
+        "sender": "Expéditeur",
+        "receiver": "Destinataire",
+        "weight": "Poids",
+        "status": {
+            "DRAFT": "Brouillon",
+            "REGISTERED": "Enregistré",
+            "PENDING_PICKUP": "En attente",
+            "PICKED_UP": "Collecté",
+            "IN_TRANSIT": "En transit",
+            "AT_HUB": "Au hub",
+            "OUT_FOR_DELIVERY": "En livraison",
+            "DELIVERED": "Livré",
+            "CANCELLED": "Annulé",
+            "RETURNED": "Retourné"
+        }
+    }
+}

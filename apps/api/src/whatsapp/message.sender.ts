@@ -38,7 +38,7 @@ export class MessageSender {
             });
 
             if (!response.ok) {
-                const error = await response.json();
+                const error = await response.json() as any;
                 return {
                     success: false,
                     error: error.error?.message ?? 'Unknown error',
@@ -46,7 +46,7 @@ export class MessageSender {
                 };
             }
 
-            const result = await response.json();
+            const result = await response.json() as any;
             return {
                 success: true,
                 messageId: result.messages?.[0]?.id,
@@ -152,7 +152,7 @@ export class MessageSender {
                 return { success: false, error: 'Failed to get media URL' };
             }
 
-            const meta = await metaResponse.json();
+            const meta = await metaResponse.json() as any;
             const mediaUrl = meta.url;
 
             // Then download the actual media

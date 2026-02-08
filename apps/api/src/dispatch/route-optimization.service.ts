@@ -12,6 +12,7 @@
  */
 
 import { logger } from '../lib/logger';
+import { getRedis } from '../lib/redis';
 
 // ==================================================
 // TYPES
@@ -235,6 +236,7 @@ export class RouteOptimizationService {
 
         // If only 1-2 stops, no optimization needed
         if (validStops.length <= 2) {
+            this.recordOptimizationMethod('AS_PROVIDED');
             return this.buildSimpleRoute(input, validStops, warnings, stopsSkipped);
         }
 
@@ -249,7 +251,29 @@ export class RouteOptimizationService {
         }
 
         // Fallback: Nearest neighbor heuristic
+        logger.warn(
+            { stopCount: validStops.length, orToolsAvailable: this.orToolsAvailable },
+            'Using nearest neighbor fallback for route optimization'
+        );
+        this.recordOptimizationMethod('NEAREST_NEIGHBOR');
         return this.optimizeWithNearestNeighbor(input, validStops, warnings, stopsSkipped);
+    }
+
+    /**
+     * Record which optimization method was used (Redis counter).
+     * Used for monitoring fallback rates.
+     */
+    private recordOptimizationMethod(method: 'OR_TOOLS' | 'NEAREST_NEIGHBOR' | 'AS_PROVIDED'): void {
+        try {
+            const redis = getRedis();
+            const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const key = `metrics:optimization:${today}`;
+            redis.hincrby(key, method, 1).catch(() => { });
+            redis.hincrby(key, 'TOTAL', 1).catch(() => { });
+            redis.expire(key, 30 * 86_400).catch(() => { }); // 30 day retention
+        } catch {
+            // Monitoring failure should never block operations
+        }
     }
 
     /**
@@ -356,6 +380,7 @@ export class RouteOptimizationService {
                         stopsSkipped,
                         optimizationMethod: 'OR_TOOLS',
                     });
+                    this.recordOptimizationMethod('OR_TOOLS');
                 });
             } catch (error) {
                 reject(error);

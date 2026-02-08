@@ -8,6 +8,7 @@
 import type { HandlerContext, HandlerResult, OutgoingMessage } from '../types';
 import { getTemplates } from '../templates';
 import { getMessageSender } from '../message.sender';
+import { logger } from '../../lib/logger';
 
 export class ScanPhotoHandler {
     readonly state = 'SCAN_PHOTO' as const;
@@ -30,7 +31,7 @@ export class ScanPhotoHandler {
         const sender = getMessageSender();
         const downloadResult = await sender.downloadMedia(mediaId);
 
-        if (!downloadResult.success) {
+        if (!downloadResult.success || !downloadResult.data) {
             return this.handlePhotoError(phoneNumber, templates);
         }
 
@@ -45,24 +46,30 @@ export class ScanPhotoHandler {
             },
         ];
 
-        // TODO: Call ScanService.requestScan({
-        //   shipmentId: session.stateData.shipmentId,
-        //   imageBase64: downloadResult.data.toString('base64'),
-        //   referenceObject: 'A4',
-        // });
-        // For now, simulate scan result
+        // Call real AI Scan Pipeline
+        try {
+            const scanResult = await ctx.services.scan.requestScan({
+                shipmentId: session.stateData.shipmentId!,
+                imageData: downloadResult.data,
+                filename: `wa-${mediaId}.jpg`,
+                referenceObject: 'A4',
+            }, {
+                requestId: `wa-${mediaId}`,
+                timestamp: new Date()
+            });
 
-        const mockScanResultId = `scan_${Date.now()}`;
-        const imageHash = downloadResult.sha256 ?? 'unknown';
-
-        return {
-            nextState: 'CALCUL_PRIX',
-            stateData: {
-                scanResultId: mockScanResultId,
-                photoReceived: true,
-            },
-            responses: processingResponses,
-        };
+            return {
+                nextState: 'CALCUL_PRIX',
+                stateData: {
+                    scanResultId: scanResult.id,
+                    photoReceived: true,
+                },
+                responses: processingResponses,
+            };
+        } catch (error) {
+            logger.error({ error, mediaId }, 'Scan request failed');
+            return this.handlePhotoError(phoneNumber, templates);
+        }
     }
 
     private requestPhoto(

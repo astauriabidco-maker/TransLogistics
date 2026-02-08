@@ -8,6 +8,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
+import { exportCSV, exportPDF } from '../services/analytics-export.service';
 
 const router = Router();
 
@@ -239,7 +240,7 @@ router.get('/hub-performance', async (req: Request, res: Response) => {
             existing.totalReceived += snap.shipmentsReceived;
             existing.totalScans += snap.scanCount;
             existing.avgScanQuality += Number(snap.avgScanConfidence);
-            existing.drivers = Math.max(existing.drivers, snap.activeDrivers);
+            existing.drivers = Math.max(existing.drivers, snap.activeDriverCount);
             existing.daysWithData++;
 
             hubSummary.set(snap.hubId, existing);
@@ -321,8 +322,8 @@ router.get('/volume-metrics', async (req: Request, res: Response) => {
             totalVolumetricWeight += Number(snap.totalVolumetricWeightKg);
             totalPayableWeight += Number(snap.totalPayableWeightKg);
             totalRevenueUplift += Number(snap.revenueUpliftXof);
-            totalQuotes += snap.quoteCount;
-            volumetricWins += snap.volumetricWinCount;
+            totalQuotes += snap.shipmentCount;
+            volumetricWins += snap.underDeclaredCount;
         }
 
         const volumeScanImpact = {
@@ -402,10 +403,10 @@ router.get('/lead-sources', async (req: Request, res: Response) => {
                 revenue: 0,
             };
 
-            existing.shipments += snap.shipmentCount;
-            existing.quotes += snap.quoteCount;
-            existing.payments += snap.paymentCount;
-            existing.revenue += Number(snap.revenueXof);
+            existing.shipments += snap.leadsInitiated;
+            existing.quotes += snap.quotesGenerated;
+            existing.payments += snap.paymentsCompleted;
+            existing.revenue += Number(snap.totalRevenueXof);
 
             sourceSummary.set(snap.leadSource, existing);
         }
@@ -490,7 +491,7 @@ router.get('/summary', async (req: Request, res: Response) => {
         let volumetricWins = 0;
         for (const snap of volumeSnapshots) {
             volumeUplift += Number(snap.revenueUpliftXof);
-            volumetricWins += snap.volumetricWinCount;
+            volumetricWins += snap.underDeclaredCount;
         }
 
         // Get lead source distribution
@@ -502,7 +503,7 @@ router.get('/summary', async (req: Request, res: Response) => {
         for (const snap of leadSnapshots) {
             leadTotals.set(
                 snap.leadSource,
-                (leadTotals.get(snap.leadSource) || 0) + Number(snap.revenueXof)
+                (leadTotals.get(snap.leadSource) || 0) + Number(snap.totalRevenueXof)
             );
         }
 
@@ -550,4 +551,147 @@ router.get('/summary', async (req: Request, res: Response) => {
     }
 });
 
+// ==================================================
+// EXPORT ENDPOINTS — CSV / PDF
+// ==================================================
+
+router.get('/route-margins/export', async (req: Request, res: Response) => {
+    try {
+        const { format = 'csv', startDate, endDate, routeId } = req.query as AnalyticsFilters & { format?: string };
+
+        const where: Record<string, unknown> = {};
+        if (routeId) where['routeId'] = routeId;
+        if (startDate || endDate) {
+            where['periodDay'] = {};
+            if (startDate) (where['periodDay'] as Record<string, unknown>)['gte'] = new Date(startDate!);
+            if (endDate) (where['periodDay'] as Record<string, unknown>)['lte'] = new Date(endDate!);
+        } else {
+            const d = new Date(); d.setDate(d.getDate() - 30);
+            where['periodDay'] = { gte: d };
+        }
+
+        const snapshots = await prisma.routePerformanceSnapshot.findMany({ where, orderBy: { periodDay: 'desc' } });
+        const routeIds = [...new Set(snapshots.map(s => s.routeId))];
+        const routes = await prisma.route.findMany({
+            where: { id: { in: routeIds } },
+            include: { originHub: { select: { code: true } }, destinationHub: { select: { code: true } } },
+        });
+        const routeMap = new Map(routes.map(r => [r.id, r]));
+
+        const headers = ['Route', 'Origine', 'Destination', 'Date', 'Revenu (XOF)', 'Coût (XOF)', 'Marge (XOF)', 'Marge %', 'Envois'];
+        const rows = snapshots.map(s => {
+            const r = routeMap.get(s.routeId);
+            const rev = Number(s.netRevenueXof);
+            const cost = Number(s.totalCostXof);
+            const margin = Number(s.grossMarginXof);
+            return {
+                'Route': r?.code || s.routeId,
+                'Origine': r?.originHub.code || '',
+                'Destination': r?.destinationHub.code || '',
+                'Date': s.periodDay.toISOString().slice(0, 10),
+                'Revenu (XOF)': rev.toFixed(0),
+                'Coût (XOF)': cost.toFixed(0),
+                'Marge (XOF)': margin.toFixed(0),
+                'Marge %': rev > 0 ? ((margin / rev) * 100).toFixed(1) : '0.0',
+                'Envois': s.shipmentCount,
+            };
+        });
+
+        if (format === 'pdf') {
+            exportPDF(res, 'marges-routes', 'Rapport Marges par Route', headers, rows);
+        } else {
+            exportCSV(res, 'marges-routes', headers, rows);
+        }
+    } catch (error) {
+        logger.error({ error }, 'Failed to export route margins');
+        res.status(500).json({ error: { code: 'EXPORT_ERROR', message: 'Export failed' } });
+    }
+});
+
+router.get('/hub-performance/export', async (req: Request, res: Response) => {
+    try {
+        const { format = 'csv', startDate, endDate, hubId } = req.query as AnalyticsFilters & { format?: string };
+
+        const where: Record<string, unknown> = {};
+        if (hubId) where['hubId'] = hubId;
+        if (startDate || endDate) {
+            where['periodDay'] = {};
+            if (startDate) (where['periodDay'] as Record<string, unknown>)['gte'] = new Date(startDate!);
+            if (endDate) (where['periodDay'] as Record<string, unknown>)['lte'] = new Date(endDate!);
+        } else {
+            const d = new Date(); d.setDate(d.getDate() - 30);
+            where['periodDay'] = { gte: d };
+        }
+
+        const snapshots = await prisma.hubPerformanceSnapshot.findMany({ where, orderBy: { periodDay: 'desc' } });
+        const hubIds = [...new Set(snapshots.map(s => s.hubId))];
+        const hubs = await prisma.hub.findMany({
+            where: { id: { in: hubIds } },
+            select: { id: true, code: true, name: true, city: true },
+        });
+        const hubMap = new Map(hubs.map(h => [h.id, h]));
+
+        const headers = ['Hub', 'Ville', 'Date', 'Envois Émis', 'Envois Reçus', 'Scans', 'Qualité Scan'];
+        const rows = snapshots.map(s => {
+            const h = hubMap.get(s.hubId);
+            return {
+                'Hub': h?.code || s.hubId,
+                'Ville': h?.city || '',
+                'Date': s.periodDay.toISOString().slice(0, 10),
+                'Envois Émis': s.shipmentsOriginated,
+                'Envois Reçus': s.shipmentsReceived,
+                'Scans': s.scanCount,
+                'Qualité Scan': Number(s.avgScanConfidence).toFixed(1),
+            };
+        });
+
+        if (format === 'pdf') {
+            exportPDF(res, 'performance-hubs', 'Rapport Performance des Hubs', headers, rows);
+        } else {
+            exportCSV(res, 'performance-hubs', headers, rows);
+        }
+    } catch (error) {
+        logger.error({ error }, 'Failed to export hub performance');
+        res.status(500).json({ error: { code: 'EXPORT_ERROR', message: 'Export failed' } });
+    }
+});
+
+router.get('/volume-metrics/export', async (req: Request, res: Response) => {
+    try {
+        const { format = 'csv', startDate, endDate } = req.query as AnalyticsFilters & { format?: string };
+
+        const where: Record<string, unknown> = {};
+        if (startDate || endDate) {
+            where['periodDay'] = {};
+            if (startDate) (where['periodDay'] as Record<string, unknown>)['gte'] = new Date(startDate!);
+            if (endDate) (where['periodDay'] as Record<string, unknown>)['lte'] = new Date(endDate!);
+        } else {
+            const d = new Date(); d.setDate(d.getDate() - 30);
+            where['periodDay'] = { gte: d };
+        }
+
+        const snapshots = await prisma.volumeMetricsSnapshot.findMany({ where, orderBy: { periodDay: 'desc' } });
+
+        const headers = ['Date', 'Poids Déclaré (kg)', 'Poids Volumétrique (kg)', 'Poids Facturable (kg)', 'Uplift Revenu (XOF)', 'Envois'];
+        const rows = snapshots.map(s => ({
+            'Date': s.periodDay.toISOString().slice(0, 10),
+            'Poids Déclaré (kg)': Number(s.totalDeclaredWeightKg).toFixed(1),
+            'Poids Volumétrique (kg)': Number(s.totalVolumetricWeightKg).toFixed(1),
+            'Poids Facturable (kg)': Number(s.totalPayableWeightKg).toFixed(1),
+            'Uplift Revenu (XOF)': Number(s.revenueUpliftXof).toFixed(0),
+            'Envois': s.shipmentCount,
+        }));
+
+        if (format === 'pdf') {
+            exportPDF(res, 'metriques-volume', 'Rapport Métriques de Volume', headers, rows);
+        } else {
+            exportCSV(res, 'metriques-volume', headers, rows);
+        }
+    } catch (error) {
+        logger.error({ error }, 'Failed to export volume metrics');
+        res.status(500).json({ error: { code: 'EXPORT_ERROR', message: 'Export failed' } });
+    }
+});
+
 export default router;
+

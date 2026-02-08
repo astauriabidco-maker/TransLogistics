@@ -1,10 +1,8 @@
 /**
- * TransLogistics Landing Page
+ * TransLogistics Landing Page V3
  * 
- * Premium, enterprise-grade landing page.
- * Trust-driven, minimalist, professional.
- * 
- * V2: Social proof, visual hero, contact form, FAQ
+ * Vibrant, Modern, Engaging Design
+ * Dynamic gradients, smooth animations, premium feel
  */
 
 import Link from 'next/link';
@@ -15,250 +13,306 @@ const CONTACT_EMAIL = 'mailto:contact@translogistics.com';
 
 export default function HomePage() {
     return (
-        <main className="min-h-screen bg-white">
+        <main className="min-h-screen bg-white overflow-hidden">
             {/* ==================== HEADER ==================== */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-100">
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                                <span className="text-white text-sm font-bold">TL</span>
+            <header className="fixed top-0 left-0 right-0 z-50">
+                <div className="mx-4 mt-4">
+                    <div className="glass-dark rounded-2xl max-w-6xl mx-auto px-6">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <span className="text-white text-sm font-bold">TL</span>
+                                </div>
+                                <span className="font-bold text-white text-lg">TransLogistics</span>
                             </div>
-                            <span className="font-semibold text-slate-900">TransLogistics</span>
+                            <nav className="hidden md:flex items-center gap-8 text-sm">
+                                <a href="#services" className="text-white/70 hover:text-white transition-colors">Services</a>
+                                <a href="#processus" className="text-white/70 hover:text-white transition-colors">Processus</a>
+                                <a href="#faq" className="text-white/70 hover:text-white transition-colors">FAQ</a>
+                            </nav>
+                            <Link href={WHATSAPP_LINK} className="btn-whatsapp text-sm py-2.5 px-5">
+                                Demander un devis
+                            </Link>
                         </div>
-                        <nav className="hidden md:flex items-center gap-8 text-sm">
-                            <a href="#capacites" className="text-slate-600 hover:text-slate-900 transition-colors">Capacités</a>
-                            <a href="#processus" className="text-slate-600 hover:text-slate-900 transition-colors">Processus</a>
-                            <a href="#faq" className="text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
-                        </nav>
-                        <Link
-                            href={WHATSAPP_LINK}
-                            className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            Demander un devis
-                        </Link>
                     </div>
                 </div>
             </header>
 
             {/* ==================== HERO ==================== */}
-            <section className="pt-32 pb-24 px-6">
-                <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full text-sm text-slate-600 mb-6">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                            En opération depuis 2024
+            <section className="hero-gradient relative min-h-screen flex items-center ">
+                <div className="hero-gradient-overlay absolute inset-0" />
+
+                {/* Floating Shapes */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-orange-500/20 rounded-full blur-3xl animate-float" />
+                    <div className="absolute top-40 right-20 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-float stagger-2" />
+                    <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-float stagger-3" />
+                </div>
+
+                <div className="relative z-10 max-w-6xl mx-auto px-6 py-32 pt-40">
+                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                        <div className="animate-slide-up">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full text-sm text-white/90 mb-8">
+                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                En opération sur 3 continents
+                            </div>
+                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
+                                Expédiez{' '}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-yellow-300">
+                                    sans stress
+                                </span>
+                            </h1>
+                            <p className="mt-6 text-xl text-white/80 leading-relaxed max-w-xl">
+                                Plateforme logistique nouvelle génération pour l'Afrique.
+                                Mesure IA, suivi WhatsApp, paiement Mobile Money.
+                            </p>
+                            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                                <Link href={WHATSAPP_LINK} className="btn-whatsapp inline-flex items-center justify-center gap-3">
+                                    <WhatsAppIcon className="w-5 h-5" />
+                                    Obtenir un devis gratuit
+                                </Link>
+                                <a href="#processus" className="btn-outline inline-flex items-center justify-center">
+                                    Comment ça marche ?
+                                </a>
+                            </div>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 leading-tight tracking-tight">
-                            Logistique internationale,<br />
-                            facturée avec précision.
-                        </h1>
-                        <p className="mt-6 text-xl text-slate-600 leading-relaxed">
-                            Plateforme opérationnelle pour l'expédition Europe-Afrique et Chine-Afrique.
-                            Mesure volumétrique par IA. Expérience client via WhatsApp.
-                            Contrôle total sur vos opérations.
-                        </p>
-                        <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                            <Link
-                                href={WHATSAPP_LINK}
-                                className="inline-flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#1da851] text-white px-6 py-3.5 rounded-lg font-medium transition-colors"
-                            >
-                                <WhatsAppIcon className="w-5 h-5" />
-                                Demander un devis sur WhatsApp
-                            </Link>
-                            <a
-                                href="#contact"
-                                className="inline-flex items-center justify-center px-6 py-3.5 rounded-lg font-medium text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
-                            >
-                                Contacter l'équipe
-                            </a>
+
+                        {/* Hero Visual */}
+                        <div className="hidden lg:block animate-slide-up stagger-2">
+                            <div className="relative">
+                                {/* Main Card */}
+                                <div className="glass-card rounded-3xl p-8 transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg">
+                                            📦
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-gray-900">Colis #TL-2024-7842</div>
+                                            <div className="text-sm text-gray-500">France → Cameroun</div>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                <span className="text-green-600">✓</span>
+                                            </div>
+                                            <span className="text-gray-700">Scanné par IA</span>
+                                            <span className="ml-auto text-sm text-gray-400">Il y a 2h</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                <span className="text-green-600">✓</span>
+                                            </div>
+                                            <span className="text-gray-700">Devis accepté</span>
+                                            <span className="ml-auto text-sm text-gray-400">Il y a 1h</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center animate-pulse">
+                                                <span className="text-orange-600">→</span>
+                                            </div>
+                                            <span className="text-gray-700 font-medium">En transit</span>
+                                            <span className="ml-auto text-sm text-orange-500">En cours</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 pt-6 border-t border-gray-100">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Arrivée estimée</span>
+                                            <span className="font-bold text-gray-900">12 Février 2024</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Floating Stats */}
+                                <div className="absolute -bottom-4 -left-8 glass-card rounded-2xl px-5 py-3 shadow-2xl animate-float">
+                                    <div className="text-2xl font-bold text-orange-500">+12%</div>
+                                    <div className="text-xs text-gray-500">économies</div>
+                                </div>
+                                <div className="absolute -top-4 -right-8 glass-card rounded-2xl px-5 py-3 shadow-2xl animate-float stagger-2">
+                                    <div className="text-2xl font-bold text-green-500">4.9★</div>
+                                    <div className="text-xs text-gray-500">satisfaction</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Visual: Abstract Flow Diagram */}
-                    <div className="hidden lg:block">
-                        <div className="relative bg-slate-50 rounded-2xl p-8 border border-slate-100">
-                            <div className="flex items-center justify-between">
-                                <FlowStep icon="📦" label="Colis" />
-                                <FlowArrow />
-                                <FlowStep icon="📸" label="Scan IA" highlight />
-                                <FlowArrow />
-                                <FlowStep icon="💬" label="Devis" />
-                                <FlowArrow />
-                                <FlowStep icon="✓" label="Livré" />
+                    {/* Stats Row */}
+                    <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {[
+                            { number: '50K+', label: 'Colis livrés' },
+                            { number: '3', label: 'Continents' },
+                            { number: '< 24h', label: 'Réponse devis' },
+                            { number: '99.5%', label: 'Livraison à temps' },
+                        ].map((stat, i) => (
+                            <div key={i} className="stat-card animate-slide-up" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
+                                <div className="text-3xl font-bold text-gray-900">{stat.number}</div>
+                                <div className="text-sm text-gray-600 mt-1">{stat.label}</div>
                             </div>
-                            <div className="mt-8 grid grid-cols-3 gap-4 text-center text-sm">
-                                <div className="bg-white rounded-lg p-4 border border-slate-100">
-                                    <div className="text-2xl font-semibold text-slate-900">3</div>
-                                    <div className="text-slate-500">Hubs actifs</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-4 border border-slate-100">
-                                    <div className="text-2xl font-semibold text-slate-900">2</div>
-                                    <div className="text-slate-500">Corridors</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-4 border border-slate-100">
-                                    <div className="text-2xl font-semibold text-slate-900">24h</div>
-                                    <div className="text-slate-500">Réponse devis</div>
-                                </div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* ==================== VALUE PILLARS ==================== */}
-            <section className="py-20 px-6 bg-slate-50">
+            {/* ==================== SERVICES ==================== */}
+            <section id="services" className="py-24 px-6 bg-gradient-to-b from-slate-50 to-white">
                 <div className="max-w-6xl mx-auto">
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <PillarCard
-                            number="01"
-                            title="Précision tarifaire"
-                            description="Mesure volumétrique automatisée par IA. Chaque colis est scanné, mesuré et facturé sur des données objectives."
-                        />
-                        <PillarCard
-                            number="02"
-                            title="Contrôle opérationnel"
-                            description="Multi-hub, traçabilité complète, historique conservé. Chaque étape est enregistrée et auditable."
-                        />
-                        <PillarCard
-                            number="03"
-                            title="Simplicité client"
-                            description="Devis et suivi via WhatsApp. Paiement Mobile Money ou carte. Onboarding en quelques minutes."
-                        />
-                    </div>
-                </div>
-            </section>
-
-            {/* ==================== CAPABILITIES ==================== */}
-            <section id="capacites" className="py-24 px-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="mb-16">
-                        <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">Capacités</p>
-                        <h2 className="text-3xl font-semibold text-slate-900">
-                            Infrastructure logistique intégrée
+                    <div className="text-center mb-16">
+                        <span className="inline-block px-4 py-1.5 bg-orange-100 text-orange-600 rounded-full text-sm font-medium mb-4">
+                            Nos Services
+                        </span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                            Tout ce qu'il faut pour{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">
+                                expédier malin
+                            </span>
                         </h2>
+                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                            Une plateforme complète qui simplifie chaque étape de votre logistique internationale.
+                        </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-12">
-                        <CapabilityCard
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <FeatureCard
+                            icon="📸"
                             title="VolumeScan AI"
-                            description="Mesure volumétrique automatique à partir d'une photo. Référence A4 pour calibration. Résultat en secondes."
-                            benefit="Facturation précise, disputes minimisées, confiance établie."
+                            description="Mesurez vos colis en 10 secondes avec une simple photo. Facturation précise, pas de disputes."
+                            gradient="from-blue-500 to-cyan-500"
                         />
-                        <CapabilityCard
-                            title="Expérience WhatsApp"
-                            description="Interface conversationnelle native. Devis instantané, confirmation de paiement, notifications de suivi."
-                            benefit="Accessibilité maximale, adoption rapide, friction réduite."
+                        <FeatureCard
+                            icon="💬"
+                            title="WhatsApp Flow"
+                            description="Devis, paiement, suivi - tout sur WhatsApp. Pas d'app à télécharger, pas de compte à créer."
+                            gradient="from-green-500 to-emerald-500"
                         />
-                        <CapabilityCard
+                        <FeatureCard
+                            icon="🛒"
                             title="Shop & Ship"
-                            description="Service d'achat pour compte. Consolidation des commandes. Gestion des fournisseurs internationaux."
-                            benefit="Accès aux produits internationaux, optimisation des volumes."
+                            description="On achète pour vous en Chine ou Europe. Consolidation intelligente pour économiser."
+                            gradient="from-purple-500 to-pink-500"
                         />
-                        <CapabilityCard
-                            title="Smart Dispatch"
-                            description="Affectation des tournées. Chauffeurs connectés. Preuve de livraison photographique."
-                            benefit="Visibilité terrain, responsabilité tracée, clients informés."
+                        <FeatureCard
+                            icon="🚚"
+                            title="Livraison Tracée"
+                            description="GPS en temps réel. Photo de livraison. Signature électronique. Zéro doute."
+                            gradient="from-orange-500 to-red-500"
                         />
                     </div>
                 </div>
             </section>
 
             {/* ==================== PROCESS ==================== */}
-            <section id="processus" className="py-24 px-6 bg-slate-900 text-white">
+            <section id="processus" className="py-24 px-6">
                 <div className="max-w-6xl mx-auto">
-                    <div className="mb-16">
-                        <p className="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">Processus</p>
-                        <h2 className="text-3xl font-semibold">
-                            Fonctionnement standard
-                        </h2>
-                    </div>
+                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <span className="inline-block px-4 py-1.5 bg-blue-100 text-blue-600 rounded-full text-sm font-medium mb-4">
+                                Comment ça marche
+                            </span>
+                            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                                4 étapes,{' '}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">
+                                    zéro prise de tête
+                                </span>
+                            </h2>
+                            <p className="text-xl text-gray-600 mb-12">
+                                De la photo à la livraison, on s'occupe de tout.
+                            </p>
 
-                    <div className="grid md:grid-cols-4 gap-8">
-                        <ProcessStep
-                            step="1"
-                            title="Réception & scan"
-                            description="Le colis est reçu, photographié avec référence A4, mesuré automatiquement."
-                        />
-                        <ProcessStep
-                            step="2"
-                            title="Calcul & validation"
-                            description="Le tarif est calculé selon volume réel. Le client reçoit et confirme le devis."
-                        />
-                        <ProcessStep
-                            step="3"
-                            title="Paiement sécurisé"
-                            description="Mobile Money, carte bancaire ou paiement en agence. Transaction enregistrée."
-                        />
-                        <ProcessStep
-                            step="4"
-                            title="Transport & preuve"
-                            description="Acheminement tracé. Livraison avec photo et signature. Historique conservé."
-                        />
+                            <div className="space-y-12">
+                                <ProcessStep
+                                    number="1"
+                                    title="Photographiez votre colis"
+                                    description="Avec une feuille A4 à côté. Notre IA calcule les dimensions automatiquement."
+                                />
+                                <ProcessStep
+                                    number="2"
+                                    title="Recevez votre devis"
+                                    description="Prix fixe basé sur le volume réel. Validez en un clic sur WhatsApp."
+                                />
+                                <ProcessStep
+                                    number="3"
+                                    title="Payez comme vous voulez"
+                                    description="Mobile Money, carte bancaire, ou en agence. Transaction sécurisée."
+                                />
+                                <ProcessStep
+                                    number="4"
+                                    title="Suivez et recevez"
+                                    description="Notifications à chaque étape. Photo de livraison avec signature."
+                                />
+                            </div>
+                        </div>
+
+                        {/* Visual */}
+                        <div className="hidden lg:block">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-3xl transform rotate-3" />
+                                <div className="relative bg-white rounded-3xl p-8 shadow-2xl border border-gray-100">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-4 p-4 bg-green-50 rounded-2xl border border-green-100">
+                                            <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white text-xl">✓</div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">Scan validé</div>
+                                                <div className="text-sm text-gray-500">Dimensions: 45 × 35 × 20 cm</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white text-xl">💰</div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">Devis: 45,000 XOF</div>
+                                                <div className="text-sm text-gray-500">Paris → Douala • 7-10 jours</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                                            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-white text-xl">🚚</div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900">En transit</div>
+                                                <div className="text-sm text-gray-500">Arrivée estimée: 15 Feb</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* ==================== COVERAGE ==================== */}
-            <section id="couverture" className="py-24 px-6">
+            <section className="py-24 px-6 bg-gray-900 text-white">
                 <div className="max-w-6xl mx-auto">
-                    <div className="mb-16">
-                        <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">Couverture</p>
-                        <h2 className="text-3xl font-semibold text-slate-900">
-                            Corridors opérationnels
+                    <div className="text-center mb-16">
+                        <span className="inline-block px-4 py-1.5 bg-white/10 text-white/90 rounded-full text-sm font-medium mb-4">
+                            Couverture
+                        </span>
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                            Vos{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400">
+                                corridors
+                            </span>{' '}
+                            préférés
                         </h2>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <CoverageCard
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <RouteCard
+                            emoji="🇫🇷"
                             route="Europe → Afrique"
-                            origin="France (Paris, Lyon, Marseille)"
-                            destination="Afrique de l'Ouest et Centrale"
+                            from="France (Paris, Lyon, Marseille)"
+                            to="Afrique de l'Ouest & Centrale"
+                            time="7-12 jours"
                         />
-                        <CoverageCard
+                        <RouteCard
+                            emoji="🇨🇳"
                             route="Chine → Afrique"
-                            origin="Guangzhou, Shenzhen, Yiwu"
-                            destination="Afrique de l'Ouest et Centrale"
+                            from="Guangzhou, Shenzhen, Yiwu"
+                            to="Afrique de l'Ouest & Centrale"
+                            time="15-25 jours"
                         />
-                        <CoverageCard
-                            route="Cameroun"
-                            origin="Hubs Douala & Yaoundé"
-                            destination="Distribution locale"
-                        />
-                    </div>
-
-                    <p className="mt-12 text-slate-500 text-sm">
-                        Architecture multi-hub extensible. Nouvelles destinations ajoutées selon la demande opérationnelle.
-                    </p>
-                </div>
-            </section>
-
-            {/* ==================== TRUST & GOVERNANCE ==================== */}
-            <section className="py-24 px-6 bg-slate-50">
-                <div className="max-w-6xl mx-auto">
-                    <div className="mb-16">
-                        <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">Gouvernance</p>
-                        <h2 className="text-3xl font-semibold text-slate-900">
-                            Confiance et transparence
-                        </h2>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <TrustCard
-                            title="Tarification immuable"
-                            description="Une fois le devis validé, le prix est figé. Pas de surfacturation."
-                        />
-                        <TrustCard
-                            title="Paiements sécurisés"
-                            description="Intégration Mobile Money et Stripe. Transactions tracées et vérifiables."
-                        />
-                        <TrustCard
-                            title="Historique auditable"
-                            description="Chaque scan, paiement et livraison est enregistré avec horodatage."
-                        />
-                        <TrustCard
-                            title="Support humain"
-                            description="Une équipe réelle répond aux questions. Pas de chatbot sans issue."
+                        <RouteCard
+                            emoji="🇨🇲"
+                            route="Local Cameroun"
+                            from="Douala, Yaoundé"
+                            to="Toutes régions"
+                            time="1-3 jours"
                         />
                     </div>
                 </div>
@@ -267,166 +321,85 @@ export default function HomePage() {
             {/* ==================== FAQ ==================== */}
             <section id="faq" className="py-24 px-6">
                 <div className="max-w-3xl mx-auto">
-                    <div className="mb-12 text-center">
-                        <p className="text-sm font-medium text-slate-500 uppercase tracking-wide mb-3">FAQ</p>
-                        <h2 className="text-3xl font-semibold text-slate-900">
+                    <div className="text-center mb-16">
+                        <span className="inline-block px-4 py-1.5 bg-purple-100 text-purple-600 rounded-full text-sm font-medium mb-4">
+                            FAQ
+                        </span>
+                        <h2 className="text-4xl font-bold text-gray-900">
                             Questions fréquentes
                         </h2>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         <FAQItem
-                            question="Comment fonctionne la mesure volumétrique ?"
-                            answer="Vous photographiez votre colis avec une feuille A4 visible à côté. Notre IA calcule automatiquement les dimensions en utilisant la feuille comme référence. Le résultat est disponible en quelques secondes."
+                            question="Comment fonctionne la mesure IA ?"
+                            answer="Photographiez votre colis avec une feuille A4 visible. Notre IA utilise la feuille comme référence pour calculer les dimensions exactes en quelques secondes. Précision garantie."
                         />
                         <FAQItem
-                            question="Quels modes de paiement acceptez-vous ?"
-                            answer="Nous acceptons Mobile Money (Orange Money, MTN Money), les cartes bancaires via Stripe, et le paiement en espèces dans nos agences partenaires."
+                            question="Quels moyens de paiement acceptez-vous ?"
+                            answer="Mobile Money (Orange, MTN, Wave), cartes bancaires (Visa, Mastercard), et espèces dans nos agences partenaires."
                         />
                         <FAQItem
                             question="Comment suivre mon colis ?"
-                            answer="Vous recevez des notifications automatiques sur WhatsApp à chaque étape : réception, départ, arrivée hub destination, et livraison. Vous pouvez aussi demander le statut à tout moment par message."
+                            answer="Vous recevez des notifications WhatsApp automatiques à chaque étape. Vous pouvez aussi demander le statut à tout moment en envoyant 'Suivi' suivi de votre numéro de colis."
                         />
                         <FAQItem
-                            question="Quels sont les délais de livraison ?"
-                            answer="Les délais varient selon la destination et le mode de transport (aérien ou maritime). Pour le fret aérien Europe-Cameroun, comptez 7-10 jours ouvrés. Un délai estimé est fourni avec chaque devis."
-                        />
-                        <FAQItem
-                            question="Travaillez-vous avec des entreprises ?"
-                            answer="Oui, nous proposons des conditions adaptées aux professionnels : tarifs négociés, facturation mensuelle, API d'intégration. Contactez-nous via le formulaire B2B ci-dessous."
+                            question="Proposez-vous des tarifs B2B ?"
+                            answer="Oui ! Tarifs négociés, facturation mensuelle, et intégration API disponibles pour les professionnels. Contactez-nous via le formulaire B2B."
                         />
                     </div>
                 </div>
             </section>
 
-            {/* ==================== CONTACT FORM (B2B) ==================== */}
-            <section id="contact" className="py-24 px-6 bg-slate-900 text-white">
+            {/* ==================== CTA ==================== */}
+            <section className="py-24 px-6">
                 <div className="max-w-4xl mx-auto">
-                    <div className="grid md:grid-cols-2 gap-12">
-                        <div>
-                            <p className="text-sm font-medium text-slate-400 uppercase tracking-wide mb-3">Contact B2B</p>
-                            <h2 className="text-3xl font-semibold mb-6">
-                                Vous êtes une entreprise ?
+                    <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-3xl p-12 md:p-16 text-center text-white relative overflow-hidden">
+                        {/* Background decoration */}
+                        <div className="absolute inset-0 overflow-hidden">
+                            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+                            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+                        </div>
+
+                        <div className="relative z-10">
+                            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                                Prêt à expédier ?
                             </h2>
-                            <p className="text-slate-400 mb-8">
-                                Tarifs négociés, facturation mensuelle, intégration API.
-                                Parlons de vos besoins logistiques.
+                            <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto">
+                                Obtenez votre devis gratuit en moins de 2 minutes sur WhatsApp.
                             </p>
-                            <div className="space-y-4 text-sm">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-slate-500">Email:</span>
-                                    <a href={CONTACT_EMAIL} className="text-white hover:underline">contact@translogistics.com</a>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-slate-500">WhatsApp:</span>
-                                    <Link href={WHATSAPP_LINK} className="text-white hover:underline">+237 6 00 00 00 00</Link>
-                                </div>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link href={WHATSAPP_LINK} className="inline-flex items-center justify-center gap-3 bg-white text-gray-900 font-bold px-8 py-4 rounded-xl hover:bg-gray-100 transition-all hover:scale-105 shadow-xl">
+                                    <WhatsAppIcon className="w-6 h-6 text-green-600" />
+                                    Démarrer sur WhatsApp
+                                </Link>
+                                <a href="#contact" className="inline-flex items-center justify-center px-8 py-4 rounded-xl font-bold border-2 border-white/40 hover:bg-white/10 transition-colors">
+                                    Contact B2B
+                                </a>
                             </div>
                         </div>
-
-                        <div className="bg-slate-800 rounded-xl p-6">
-                            <form className="space-y-4" action={CONTACT_EMAIL} method="GET">
-                                <div>
-                                    <label htmlFor="company" className="block text-sm text-slate-400 mb-1.5">Entreprise</label>
-                                    <input
-                                        type="text"
-                                        id="company"
-                                        name="company"
-                                        className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-slate-500"
-                                        placeholder="Nom de l'entreprise"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="email" className="block text-sm text-slate-400 mb-1.5">Email</label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-slate-500"
-                                        placeholder="vous@entreprise.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="volume" className="block text-sm text-slate-400 mb-1.5">Volume estimé / mois</label>
-                                    <select
-                                        id="volume"
-                                        name="volume"
-                                        className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-slate-500"
-                                    >
-                                        <option value="">Sélectionner</option>
-                                        <option value="1-10">1-10 colis</option>
-                                        <option value="10-50">10-50 colis</option>
-                                        <option value="50-200">50-200 colis</option>
-                                        <option value="200+">200+ colis</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label htmlFor="message" className="block text-sm text-slate-400 mb-1.5">Message</label>
-                                    <textarea
-                                        id="message"
-                                        name="body"
-                                        rows={3}
-                                        className="w-full px-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 resize-none"
-                                        placeholder="Décrivez vos besoins..."
-                                    ></textarea>
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="w-full bg-white text-slate-900 py-3 rounded-lg font-medium hover:bg-slate-100 transition-colors"
-                                >
-                                    Envoyer la demande
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ==================== FINAL CTA ==================== */}
-            <section className="py-24 px-6 border-t border-slate-100">
-                <div className="max-w-2xl mx-auto text-center">
-                    <h2 className="text-2xl font-semibold text-slate-900 mb-4">
-                        Prêt à expédier ?
-                    </h2>
-                    <p className="text-slate-600 mb-8">
-                        Obtenez un devis pour votre prochaine expédition.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link
-                            href={WHATSAPP_LINK}
-                            className="inline-flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#1da851] text-white px-6 py-3.5 rounded-lg font-medium transition-colors"
-                        >
-                            <WhatsAppIcon className="w-5 h-5" />
-                            WhatsApp
-                        </Link>
-                        <a
-                            href="#contact"
-                            className="inline-flex items-center justify-center px-6 py-3.5 rounded-lg font-medium text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
-                        >
-                            Contact B2B
-                        </a>
                     </div>
                 </div>
             </section>
 
             {/* ==================== FOOTER ==================== */}
-            <footer className="py-12 px-6 bg-slate-900 text-slate-400">
+            <footer className="py-16 px-6 bg-gray-900 text-white">
                 <div className="max-w-6xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
                                 <span className="text-white text-sm font-bold">TL</span>
                             </div>
-                            <span className="font-medium text-white">TransLogistics</span>
+                            <span className="font-bold text-xl">TransLogistics</span>
                         </div>
-                        <nav className="flex items-center gap-6 text-sm">
-                            <a href="#capacites" className="hover:text-white transition-colors">Capacités</a>
+                        <nav className="flex items-center gap-8 text-sm text-gray-400">
+                            <a href="#services" className="hover:text-white transition-colors">Services</a>
                             <a href="#processus" className="hover:text-white transition-colors">Processus</a>
                             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
-                            <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+                            <a href={CONTACT_EMAIL} className="hover:text-white transition-colors">Contact</a>
                         </nav>
                     </div>
-                    <div className="mt-8 pt-8 border-t border-slate-800 text-center text-sm">
+                    <div className="mt-12 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
                         © {new Date().getFullYear()} TransLogistics. Tous droits réservés.
                     </div>
                 </div>
@@ -439,96 +412,56 @@ export default function HomePage() {
 // COMPONENTS
 // ==================================================
 
-function FlowStep({ icon, label, highlight }: { icon: string; label: string; highlight?: boolean }) {
+function FeatureCard({ icon, title, description, gradient }: { icon: string; title: string; description: string; gradient: string }) {
     return (
-        <div className={`flex flex-col items-center gap-2 ${highlight ? 'scale-110' : ''}`}>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${highlight ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-white border border-slate-200'}`}>
+        <div className="feature-card group">
+            <div className={`w-14 h-14 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center text-2xl mb-5 shadow-lg group-hover:scale-110 transition-transform`}>
                 {icon}
             </div>
-            <span className={`text-xs font-medium ${highlight ? 'text-blue-600' : 'text-slate-600'}`}>{label}</span>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+            <p className="text-gray-600 leading-relaxed">{description}</p>
         </div>
     );
 }
 
-function FlowArrow() {
+function ProcessStep({ number, title, description }: { number: string; title: string; description: string }) {
     return (
-        <div className="flex-1 flex items-center justify-center">
-            <div className="w-full h-px bg-slate-300 relative">
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-l-4 border-l-slate-300 border-y-4 border-y-transparent"></div>
-            </div>
+        <div className="process-step">
+            <div className="step-number">{number}</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+            <p className="text-gray-600">{description}</p>
         </div>
     );
 }
 
-function PillarCard({ number, title, description }: { number: string; title: string; description: string }) {
+function RouteCard({ emoji, route, from, to, time }: { emoji: string; route: string; from: string; to: string; time: string }) {
     return (
-        <div className="p-8">
-            <div className="text-sm font-medium text-slate-400 mb-4">{number}</div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-3">{title}</h3>
-            <p className="text-slate-600 leading-relaxed">{description}</p>
-        </div>
-    );
-}
-
-function CapabilityCard({ title, description, benefit }: { title: string; description: string; benefit: string }) {
-    return (
-        <div className="border-l-2 border-slate-200 pl-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">{title}</h3>
-            <p className="text-slate-600 mb-4">{description}</p>
-            <p className="text-sm text-slate-500 italic">{benefit}</p>
-        </div>
-    );
-}
-
-function ProcessStep({ step, title, description }: { step: string; title: string; description: string }) {
-    return (
-        <div>
-            <div className="text-3xl font-semibold text-slate-500 mb-4">{step}</div>
-            <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
-        </div>
-    );
-}
-
-function CoverageCard({ route, origin, destination }: { route: string; origin: string; destination: string }) {
-    return (
-        <div className="p-6 bg-white border border-slate-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">{route}</h3>
-            <div className="space-y-2 text-sm">
-                <div>
-                    <span className="text-slate-500">Origine:</span>
-                    <span className="ml-2 text-slate-700">{origin}</span>
-                </div>
-                <div>
-                    <span className="text-slate-500">Destination:</span>
-                    <span className="ml-2 text-slate-700">{destination}</span>
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-colors">
+            <div className="text-4xl mb-4">{emoji}</div>
+            <h3 className="text-xl font-bold mb-4">{route}</h3>
+            <div className="space-y-2 text-sm text-gray-400">
+                <div><span className="text-gray-500">De:</span> {from}</div>
+                <div><span className="text-gray-500">Vers:</span> {to}</div>
+                <div className="pt-2 border-t border-white/10">
+                    <span className="text-orange-400 font-medium">{time}</span>
                 </div>
             </div>
-        </div>
-    );
-}
-
-function TrustCard({ title, description }: { title: string; description: string }) {
-    return (
-        <div>
-            <h3 className="font-semibold text-slate-900 mb-2">{title}</h3>
-            <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
         </div>
     );
 }
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
     return (
-        <details className="group border-b border-slate-200 pb-6">
-            <summary className="flex items-center justify-between cursor-pointer list-none">
-                <span className="font-medium text-slate-900">{question}</span>
-                <span className="text-slate-400 group-open:rotate-180 transition-transform">
+        <details className="group bg-gray-50 rounded-2xl overflow-hidden">
+            <summary className="flex items-center justify-between cursor-pointer list-none p-6">
+                <span className="font-semibold text-gray-900 pr-4">{question}</span>
+                <span className="text-orange-500 group-open:rotate-180 transition-transform flex-shrink-0">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                 </span>
             </summary>
-            <p className="mt-4 text-slate-600 leading-relaxed">{answer}</p>
+            <p className="px-6 pb-6 text-gray-600 leading-relaxed">{answer}</p>
         </details>
     );
 }

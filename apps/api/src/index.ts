@@ -9,15 +9,29 @@ import { connectDatabase, disconnectDatabase } from './lib/db';
 import { connectRedis, disconnectRedis } from './lib/redis';
 import { httpLogger, errorLogger } from './middleware/logger';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
+import { globalRateLimiter, webhookRateLimiter, adminRateLimiter, adminPerUserRateLimiter } from './middleware/rate-limiter';
+import {
+    getCorsOptions,
+    getHelmetOptions,
+    requestIdMiddleware,
+    webhookCircuitBreaker,
+} from './middleware/security';
+import { authenticate } from './middleware/auth.middleware';
 import healthRoutes from './routes/health';
+import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import automationRoutes from './routes/automation.routes';
+import autonomyRoutes from './routes/autonomy.routes';
 import shipmentRoutes from './shipment/shipment.routes';
+import trackingRoutes from './routes/tracking.routes';
 import { purchaseRequestRoutes, supplierOrderRoutes, consolidationRoutes } from './shop-ship';
 import { webhookRouter, getPaymentService, createCinetPayAdapter, createStripeAdapter } from './payments';
 import driverRoutes from './dispatch/driver.routes';
+import { createWhatsAppRouter } from './whatsapp/webhook.handler';
 import { prisma } from './lib/prisma';
 import { startPaymentCron, stopPaymentCron } from './cron/payment.cron';
+import { setupSwagger } from './config/swagger';
 
 /**
  * TransLogistics API Server
@@ -31,9 +45,15 @@ const app = express();
 // MIDDLEWARE
 // ==================================================
 
+// Request ID (must be first)
+app.use(requestIdMiddleware);
+
 // Security
-app.use(helmet());
-app.use(cors());
+app.use(helmet(getHelmetOptions()));
+app.use(cors(getCorsOptions()));
+
+// Rate Limiting (global)
+app.use(globalRateLimiter);
 
 // Parsing
 app.use(express.json({ limit: '10mb' }));
@@ -47,18 +67,42 @@ app.use(compression());
 // ==================================================
 
 // Payment webhooks need raw body for signature verification
-app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRouter);
+app.use('/webhooks', webhookRateLimiter, webhookCircuitBreaker(), express.raw({ type: 'application/json' }), webhookRouter);
+
+// WhatsApp webhook
+app.use('/whatsapp', webhookRateLimiter, createWhatsAppRouter(prisma));
 
 // Logging
 app.use(httpLogger);
 
 // ==================================================
-// ROUTES
+// API DOCUMENTATION
+// ==================================================
+
+setupSwagger(app);
+
+// ==================================================
+// ROUTES — Public
 // ==================================================
 
 app.use('/health', healthRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/analytics', analyticsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/tracking', trackingRoutes);
+
+// ==================================================
+// JWT AUTHENTICATION — Applied globally after public routes
+// ==================================================
+
+app.use(authenticate);
+
+// ==================================================
+// ROUTES — Protected
+// ==================================================
+
+app.use('/api/admin', adminRateLimiter, adminPerUserRateLimiter, adminRoutes);
+app.use('/api/admin/automation', adminRateLimiter, adminPerUserRateLimiter, automationRoutes);
+app.use('/api/admin/autonomy', adminRateLimiter, adminPerUserRateLimiter, autonomyRoutes);
+app.use('/api/analytics', adminRateLimiter, adminPerUserRateLimiter, analyticsRoutes);
 app.use('/api/shipments', shipmentRoutes);
 
 // Shop & Ship module

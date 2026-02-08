@@ -230,6 +230,61 @@ export class ShipmentService {
     }
 
     /**
+     * Get shipment by tracking code.
+     */
+    async getByTrackingCode(trackingCode: string): Promise<ShipmentWithEvents> {
+        const shipment = await this.prisma.shipment.findUnique({
+            where: { trackingCode },
+            include: {
+                events: {
+                    orderBy: { createdAt: 'asc' },
+                },
+            },
+        });
+
+        if (!shipment) {
+            throw new ShipmentError('SHIPMENT_NOT_FOUND', `Shipment with tracking code ${trackingCode} not found`);
+        }
+
+        return shipment;
+    }
+
+    /**
+     * Create a DRAFT shipment.
+     * Used by WhatsApp and web forms before pricing is finalized.
+     */
+    async createDraft(input: {
+        customerId: string;
+        routeId: string;
+        packageDescription: string;
+        originPhone: string;
+        originContactName: string;
+        destPhone: string;
+        destContactName: string;
+    }): Promise<Shipment> {
+        const trackingCode = this.generateTrackingCode();
+
+        return this.prisma.shipment.create({
+            data: {
+                trackingCode,
+                status: 'DRAFT',
+                customerId: input.customerId,
+                routeId: input.routeId,
+                packageDescription: input.packageDescription,
+                originAddressLine1: 'To be defined',
+                originCity: 'Abidjan', // Default
+                originPhone: input.originPhone,
+                originContactName: input.originContactName,
+                destAddressLine1: 'To be defined',
+                destCity: 'Bouaké', // Default
+                destPhone: input.destPhone,
+                destContactName: input.destContactName,
+                leadSource: 'WHATSAPP',
+            },
+        });
+    }
+
+    /**
      * Get shipments by status for admin dashboards.
      */
     async getByStatus(
@@ -250,6 +305,10 @@ export class ShipmentService {
             skip: options.offset || 0,
             orderBy: { updatedAt: 'desc' },
         });
+    }
+
+    private generateTrackingCode(): string {
+        return `TL-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
     }
 }
 

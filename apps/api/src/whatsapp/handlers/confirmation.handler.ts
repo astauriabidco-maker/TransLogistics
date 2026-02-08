@@ -5,7 +5,7 @@
  * Calls QuoteService to accept/reject.
  */
 
-import type { HandlerContext, HandlerResult, OutgoingMessage } from '../types';
+import type { HandlerContext, HandlerResult, OutgoingMessage, IncomingMessage } from '../types';
 import { getTemplates } from '../templates';
 
 export class ConfirmationHandler {
@@ -18,18 +18,18 @@ export class ConfirmationHandler {
         const selectedId = this.getSelectedButtonId(message);
 
         if (selectedId === 'CONFIRM_YES') {
-            return this.handleAccept(phoneNumber, session.stateData.quoteId, templates);
+            return this.handleAccept(phoneNumber, session.stateData.quoteId, templates, ctx);
         }
 
         if (selectedId === 'CONFIRM_NO') {
-            return this.handleReject(phoneNumber, templates);
+            return this.handleReject(phoneNumber, templates, ctx);
         }
 
         // Invalid input - resend confirmation buttons
         return this.resendConfirmation(phoneNumber, templates);
     }
 
-    private getSelectedButtonId(message: typeof ctx.message): string | null {
+    private getSelectedButtonId(message: IncomingMessage): string | null {
         if (message.type === 'interactive') {
             return message.interactive?.button_reply?.id ?? null;
         }
@@ -48,10 +48,18 @@ export class ConfirmationHandler {
     private async handleAccept(
         phoneNumber: string,
         quoteId: string | undefined,
-        templates: ReturnType<typeof getTemplates>
+        templates: ReturnType<typeof getTemplates>,
+        ctx: HandlerContext
     ): Promise<HandlerResult> {
-        // TODO: Call QuoteService.acceptQuote(quoteId)
-        // TODO: Call ShipmentService.confirmShipment(shipmentId)
+        if (!quoteId) {
+            throw new Error('No quote ID found in session');
+        }
+
+        // Call real QuoteService
+        await ctx.services.quote.acceptQuote(quoteId, {
+            requestId: `wa-accept-${quoteId}`,
+            timestamp: new Date()
+        });
 
         const responses: OutgoingMessage[] = [
             {
@@ -90,10 +98,17 @@ export class ConfirmationHandler {
 
     private async handleReject(
         phoneNumber: string,
-        templates: ReturnType<typeof getTemplates>
+        templates: ReturnType<typeof getTemplates>,
+        ctx: HandlerContext
     ): Promise<HandlerResult> {
-        // TODO: Call QuoteService.rejectQuote(quoteId)
-        // TODO: Call ShipmentService.cancelShipment(shipmentId)
+        const quoteId = ctx.session.stateData.quoteId;
+        if (quoteId) {
+            // Call real QuoteService
+            await ctx.services.quote.rejectQuote(quoteId, {
+                requestId: `wa-reject-${quoteId}`,
+                timestamp: new Date()
+            });
+        }
 
         const responses: OutgoingMessage[] = [
             {

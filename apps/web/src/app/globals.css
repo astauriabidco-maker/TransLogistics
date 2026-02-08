@@ -1,36 +1,47 @@
 @import "tailwindcss";
 
 /* ===========================================
-   TransLogistics Design System
-   Enterprise-grade, Trust-driven
+   TransLogistics Design System V2
+   Vibrant, Modern, Engaging
    =========================================== */
 
 @theme {
   --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  /* Neutral Enterprise Palette */
-  --color-slate-950: #0f172a;
-  --color-slate-900: #1e293b;
-  --color-slate-800: #334155;
-  --color-slate-700: #475569;
-  --color-slate-600: #64748b;
-  --color-slate-500: #94a3b8;
-  --color-slate-400: #cbd5e1;
-  --color-slate-300: #e2e8f0;
-  --color-slate-200: #f1f5f9;
-  --color-slate-100: #f8fafc;
+  /* Vibrant Primary Palette - Orange/Coral Energy */
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f97316;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
 
-  /* Accent - Used sparingly */
-  --color-accent: #0066CC;
-  --color-accent-dark: #004d99;
+  /* Deep Blue - Trust & Professionalism */
+  --color-deep-50: #eff6ff;
+  --color-deep-100: #dbeafe;
+  --color-deep-500: #3b82f6;
+  --color-deep-600: #2563eb;
+  --color-deep-700: #1d4ed8;
+  --color-deep-800: #1e40af;
+  --color-deep-900: #1e3a8a;
+  --color-deep-950: #0f172a;
+
+  /* Success Green */
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
 
   /* WhatsApp */
   --color-whatsapp: #25D366;
-  --color-whatsapp-hover: #1da851;
+  --color-whatsapp-hover: #1ebe5d;
 }
 
-/* Google Fonts - Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* Base */
 html {
@@ -42,11 +53,342 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #ffffff;
-  color: var(--color-slate-900);
+  color: #1e293b;
 }
 
-/* Selection */
 ::selection {
-  background: var(--color-accent);
+  background: var(--color-primary-500);
   color: white;
+}
+
+/* ===========================================
+   Animations
+   =========================================== */
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 20px 10px rgba(249, 115, 22, 0);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+/* Staggered animations */
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+/* ===========================================
+   Hero Gradients
+   =========================================== */
+
+.hero-gradient {
+  background: linear-gradient(135deg,
+      #1e3a8a 0%,
+      #3b82f6 25%,
+      #0ea5e9 50%,
+      #06b6d4 75%,
+      #14b8a6 100%);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+.hero-gradient-overlay {
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.4) 100%);
+}
+
+/* ===========================================
+   Glass Effects
+   =========================================== */
+
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+}
+
+/* ===========================================
+   Buttons
+   =========================================== */
+
+.btn-primary {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: white;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.5);
+}
+
+.btn-whatsapp {
+  background: linear-gradient(135deg, #25D366 0%, #1ebe5d 100%);
+  color: white;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+}
+
+.btn-whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5);
+}
+
+.btn-outline {
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+/* ===========================================
+   Cards
+   =========================================== */
+
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f97316, #3b82f6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  border-color: transparent;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* ===========================================
+   Process Steps
+   =========================================== */
+
+.process-step {
+  position: relative;
+  padding-left: 80px;
+}
+
+.process-step::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 60px;
+  bottom: -60px;
+  width: 2px;
+  background: linear-gradient(180deg, #f97316 0%, #3b82f6 100%);
+}
+
+.process-step:last-child::before {
+  display: none;
+}
+
+.step-number {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+}
+
+/* ===========================================
+   Interactive Elements
+   =========================================== */
+
+.icon-box {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.icon-box:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Hover grow effect */
+.hover-grow {
+  transition: transform 0.3s ease;
+}
+
+.hover-grow:hover {
+  transform: scale(1.05);
+}
+
+/* Shimmer effect */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 100%;
+  }
 }

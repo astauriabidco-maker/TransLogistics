@@ -345,3 +345,42 @@
         width: 100%;
     }
 }
+
+/* Export Buttons */
+.export-buttons {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.15s ease;
+}
+
+.export-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.export-csv:hover {
+    background: #ecfdf5;
+    border-color: #059669;
+    color: #059669;
+}
+
+.export-pdf:hover {
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #2563eb;
+}

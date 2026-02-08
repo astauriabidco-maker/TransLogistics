@@ -204,6 +204,26 @@ export default function AnalyticsDashboard() {
         }).format(num);
     };
 
+    // Export handler — triggers download via the backend export endpoints
+    const handleExport = (format: 'csv' | 'pdf') => {
+        const tabEndpointMap: Record<string, string> = {
+            margins: 'route-margins',
+            hubs: 'hub-performance',
+            volume: 'volume-metrics',
+        };
+        const endpoint = tabEndpointMap[activeTab];
+        if (!endpoint) return;
+
+        const params = new URLSearchParams({ format });
+        if (filters.startDate) params.set('startDate', filters.startDate);
+        if (filters.endDate) params.set('endDate', filters.endDate);
+        if (filters.routeId) params.set('routeId', filters.routeId);
+        if (filters.hubId) params.set('hubId', filters.hubId);
+
+        // Open the export URL in a new tab (triggers download)
+        window.open(`/api/analytics/${endpoint}/export?${params.toString()}`, '_blank');
+    };
+
     return (
         <div className="analytics-dashboard">
             <header className="analytics-header">
@@ -287,6 +307,16 @@ export default function AnalyticsDashboard() {
                     >
                         Réinitialiser
                     </button>
+                    {(activeTab === 'margins' || activeTab === 'hubs' || activeTab === 'volume') && (
+                        <div className="export-buttons">
+                            <button className="export-btn export-csv" onClick={() => handleExport('csv')} title="Exporter en CSV">
+                                📄 CSV
+                            </button>
+                            <button className="export-btn export-pdf" onClick={() => handleExport('pdf')} title="Exporter en PDF">
+                                📑 PDF
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

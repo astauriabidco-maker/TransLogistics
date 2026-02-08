@@ -103,6 +103,7 @@ export class SessionRepository {
             where: { id: sessionId },
             data: {
                 ...updates,
+                stateData: updates.stateData as any,
                 expiresAt,
             },
         });

@@ -5,7 +5,7 @@
  * Calls PaymentService to start payment flow.
  */
 
-import type { HandlerContext, HandlerResult, OutgoingMessage } from '../types';
+import type { HandlerContext, HandlerResult, OutgoingMessage, IncomingMessage } from '../types';
 import { getTemplates, format } from '../templates';
 
 export class PaiementHandler {
@@ -18,18 +18,18 @@ export class PaiementHandler {
         const selectedId = this.getSelectedButtonId(message);
 
         if (selectedId === 'PAY_MOBILE') {
-            return this.handleMobileMoney(phoneNumber, session.stateData, templates);
+            return this.handleMobileMoney(phoneNumber, session.stateData, templates, ctx);
         }
 
         if (selectedId === 'PAY_CASH') {
-            return this.handleCash(phoneNumber, session.stateData, templates);
+            return this.handleCash(phoneNumber, session.stateData, templates, ctx);
         }
 
         // Invalid input - resend payment options
         return this.resendPaymentOptions(phoneNumber, templates);
     }
 
-    private getSelectedButtonId(message: typeof ctx.message): string | null {
+    private getSelectedButtonId(message: IncomingMessage): string | null {
         if (message.type === 'interactive') {
             return message.interactive?.button_reply?.id ?? null;
         }
@@ -47,21 +47,17 @@ export class PaiementHandler {
 
     private async handleMobileMoney(
         phoneNumber: string,
-        stateData: Record<string, unknown>,
-        templates: ReturnType<typeof getTemplates>
+        stateData: Record<string, any>,
+        templates: ReturnType<typeof getTemplates>,
+        ctx: HandlerContext
     ): Promise<HandlerResult> {
-        // TODO: Call PaymentService.initiatePayment({
-        //   shipmentId: stateData.shipmentId,
-        //   method: 'MOBILE_MONEY',
-        // });
-
-        const mockPaymentId = `pay_${Date.now()}`;
-        const mockReference = `TL${Date.now().toString().slice(-8)}`;
-        const amount = stateData.quotePriceXof ?? 5500;
-
-        const instructionsText = format(templates.paymentInstructions, {
-            reference: mockReference,
-            amount: Number(amount).toLocaleString('fr-FR'),
+        // Call real PaymentService
+        const result = await ctx.services.payment.initiatePayment({
+            shipmentId: stateData['shipmentId']!,
+            quoteId: stateData['quoteId']!,
+            amountXof: Number(stateData['quotePriceXof']),
+            method: 'MOBILE_MONEY',
+            provider: 'CINETPAY',
         });
 
         const responses: OutgoingMessage[] = [
@@ -77,33 +73,15 @@ export class PaiementHandler {
                 recipient_type: 'individual',
                 to: phoneNumber,
                 type: 'text',
-                text: { body: instructionsText },
+                text: { body: `🔗 Lien de paiement sécurisé : ${result.paymentUrl}\n\nUne fois le paiement effectué, votre colis sera prêt pour la collecte.` },
             },
         ];
-
-        // In real flow, payment confirmation would come via webhook
-        // For now, simulate immediate confirmation
-
-        const mockTrackingCode = `TL-${Date.now().toString(36).toUpperCase()}`;
-
-        const confirmText = format(templates.paymentConfirmed, {
-            trackingCode: mockTrackingCode,
-        });
-
-        responses.push({
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: phoneNumber,
-            type: 'text',
-            text: { body: confirmText },
-        });
 
         return {
             nextState: 'SUIVI',
             stateData: {
                 paymentMethod: 'MOBILE_MONEY',
-                paymentId: mockPaymentId,
-                trackingCode: mockTrackingCode,
+                paymentId: result.payment.id,
             },
             responses,
         };
@@ -111,19 +89,17 @@ export class PaiementHandler {
 
     private async handleCash(
         phoneNumber: string,
-        stateData: Record<string, unknown>,
-        templates: ReturnType<typeof getTemplates>
+        stateData: Record<string, any>,
+        templates: ReturnType<typeof getTemplates>,
+        ctx: HandlerContext
     ): Promise<HandlerResult> {
-        // TODO: Call PaymentService.initiatePayment({
-        //   shipmentId: stateData.shipmentId,
-        //   method: 'CASH',
-        // });
-
-        const mockPaymentId = `pay_${Date.now()}`;
-        const mockTrackingCode = `TL-${Date.now().toString(36).toUpperCase()}`;
-
-        const confirmText = format(templates.paymentConfirmed, {
-            trackingCode: mockTrackingCode,
+        // Call real PaymentService
+        const result = await ctx.services.payment.initiatePayment({
+            shipmentId: stateData['shipmentId']!,
+            quoteId: stateData['quoteId']!,
+            amountXof: Number(stateData['quotePriceXof']),
+            method: 'CASH',
+            provider: 'CINETPAY', // Base provider info
         });
 
         const responses: OutgoingMessage[] = [
@@ -132,14 +108,14 @@ export class PaiementHandler {
                 recipient_type: 'individual',
                 to: phoneNumber,
                 type: 'text',
-                text: { body: `💵 Paiement en espèces sélectionné.\n\nVous paierez *${Number(stateData.quotePriceXof ?? 5500).toLocaleString('fr-FR')} FCFA* lors de la collecte.` },
+                text: { body: `💵 Paiement en espèces sélectionné.\n\nVous paierez *${Number(stateData['quotePriceXof']).toLocaleString('fr-FR')} FCFA* lors de la collecte.` },
             },
             {
                 messaging_product: 'whatsapp',
                 recipient_type: 'individual',
                 to: phoneNumber,
                 type: 'text',
-                text: { body: confirmText },
+                text: { body: templates.paymentConfirmed.replace('{{trackingCode}}', 'Votre code de suivi habituel') },
             },
         ];
 
@@ -147,8 +123,7 @@ export class PaiementHandler {
             nextState: 'SUIVI',
             stateData: {
                 paymentMethod: 'CASH',
-                paymentId: mockPaymentId,
-                trackingCode: mockTrackingCode,
+                paymentId: result.payment.id,
             },
             responses,
         };

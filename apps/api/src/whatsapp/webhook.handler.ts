@@ -7,13 +7,14 @@
 
 import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
+import type { PrismaClient } from '@prisma/client';
 import { getWhatsAppConfig } from './config';
 import { SessionRepository } from './session.repository';
 import { IdempotencyService } from './idempotency.service';
 import { WhatsAppAuditLogger } from './audit.logger';
+import { ServiceRegistry } from './service-registry';
 import { processMessage } from './message.processor';
 import { logger } from '../lib/logger';
-import type { PrismaClient } from '@prisma/client';
 import type { WhatsAppWebhookPayload, IncomingMessage } from './types';
 
 // ==================================================
@@ -26,6 +27,7 @@ export function createWhatsAppRouter(prisma: PrismaClient): Router {
     const sessionRepo = new SessionRepository(prisma);
     const idempotency = new IdempotencyService(prisma);
     const auditLogger = new WhatsAppAuditLogger(prisma);
+    const services = new ServiceRegistry(prisma);
 
     /**
      * GET /whatsapp/webhook - Verification endpoint
@@ -40,7 +42,7 @@ export function createWhatsAppRouter(prisma: PrismaClient): Router {
             logger.info('WhatsApp webhook verified');
             res.status(200).send(challenge);
         } else {
-            logger.warn('WhatsApp webhook verification failed', { mode, token });
+            logger.warn({ mode, token }, 'WhatsApp webhook verification failed');
             res.sendStatus(403);
         }
     });
@@ -51,6 +53,8 @@ export function createWhatsAppRouter(prisma: PrismaClient): Router {
      */
     router.post('/webhook', async (req: Request, res: Response) => {
         // Validate signature
+        // Note: Express.raw() middleware makes req.body a Buffer if registered correctly, 
+        // but here it might be already parsed. We need the raw body for HMAC.
         if (!validateSignature(req, config.webhookSecret)) {
             logger.warn('Invalid WhatsApp webhook signature');
             res.sendStatus(401);
@@ -66,10 +70,11 @@ export function createWhatsAppRouter(prisma: PrismaClient): Router {
                 req.body,
                 sessionRepo,
                 idempotency,
-                auditLogger
+                auditLogger,
+                services
             );
         } catch (error) {
-            logger.error('WhatsApp webhook processing error', { error });
+            logger.error({ error }, 'WhatsApp webhook processing error');
         }
     });
 
@@ -84,9 +89,12 @@ function validateSignature(req: Request, secret: string): boolean {
     const signature = req.headers['x-hub-signature-256'] as string;
     if (!signature) return false;
 
+    // Use rawBody if available (from custom middleware or express.raw)
+    const bodyString = (req as any).rawBody || JSON.stringify(req.body);
+
     const expectedSignature = `sha256=${crypto
         .createHmac('sha256', secret)
-        .update(JSON.stringify(req.body))
+        .update(bodyString)
         .digest('hex')}`;
 
     return crypto.timingSafeEqual(
@@ -103,7 +111,8 @@ async function handleWebhookPayload(
     payload: WhatsAppWebhookPayload,
     sessionRepo: SessionRepository,
     idempotency: IdempotencyService,
-    auditLogger: WhatsAppAuditLogger
+    auditLogger: WhatsAppAuditLogger,
+    services: ServiceRegistry
 ): Promise<void> {
     // Only process whatsapp_business_account events
     if (payload.object !== 'whatsapp_business_account') {
@@ -124,7 +133,8 @@ async function handleWebhookPayload(
                     contacts,
                     sessionRepo,
                     idempotency,
-                    auditLogger
+                    auditLogger,
+                    services
                 );
             }
         }
@@ -136,7 +146,8 @@ async function handleMessage(
     contacts: Array<{ profile: { name: string }; wa_id: string }>,
     sessionRepo: SessionRepository,
     idempotency: IdempotencyService,
-    auditLogger: WhatsAppAuditLogger
+    auditLogger: WhatsAppAuditLogger,
+    services: ServiceRegistry
 ): Promise<void> {
     const messageId = message.id;
     const phoneNumber = message.from;
@@ -144,7 +155,7 @@ async function handleMessage(
 
     // Idempotency check (database-backed, survives restart)
     if (await idempotency.isProcessed(messageId)) {
-        logger.debug('Duplicate message ignored', { messageId });
+        logger.debug({ messageId }, 'Duplicate message ignored');
         return;
     }
     await idempotency.markProcessed(messageId);
@@ -157,12 +168,12 @@ async function handleMessage(
     const session = await sessionRepo.getOrCreateSession(phoneNumber);
 
     // Log incoming message
-    logger.info('WhatsApp message received', {
+    logger.info({
         messageId,
         phoneNumber,
         type: message.type,
         state: session.state,
-    });
+    }, 'WhatsApp message received');
 
     let errorMessage: string | undefined;
 
@@ -173,10 +184,10 @@ async function handleMessage(
             message,
             phoneNumber,
             userName,
-        }, sessionRepo);
+        }, services, sessionRepo);
     } catch (error) {
         errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error('Message processing failed', { error, messageId });
+        logger.error({ error, messageId }, 'Message processing failed');
     }
 
     // Audit log (async, non-blocking)

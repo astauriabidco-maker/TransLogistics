@@ -199,5 +199,5 @@ export function getPreviousState(state: WhatsAppState): WhatsAppState | null {
         'SUIVI',
     ];
     const index = order.indexOf(state);
-    return index > 0 ? order[index - 1] : null;
+    return index > 0 ? (order[index - 1] as WhatsAppState) : null;
 }

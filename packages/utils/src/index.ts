@@ -13,3 +13,6 @@ export * from './formatting';
 
 // Constants
 export * from './constants';
+
+// Schemas
+export * from './schemas/scan-diagnostics.schema';

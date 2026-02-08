@@ -21,6 +21,8 @@ import { ConfirmationHandler } from './handlers/confirmation.handler';
 import { PaiementHandler } from './handlers/paiement.handler';
 import { SuiviHandler } from './handlers/suivi.handler';
 
+import { ServiceRegistry } from './service-registry';
+
 // ==================================================
 // HANDLER REGISTRY
 // ==================================================
@@ -40,10 +42,12 @@ const handlers: Record<WhatsAppState, { handle: (ctx: HandlerContext) => Promise
 // ==================================================
 
 export async function processMessage(
-    ctx: HandlerContext,
+    ctx: Omit<HandlerContext, 'services'>,
+    services: ServiceRegistry,
     sessionRepo: SessionRepository
 ): Promise<void> {
     const { session, message } = ctx;
+    const fullCtx: HandlerContext = { ...ctx, services };
     const sender = getMessageSender();
     const templates = getTemplates('fr');
 
@@ -54,13 +58,13 @@ export async function processMessage(
         // Get handler for current state
         const handler = handlers[session.state];
         if (!handler) {
-            logger.error('No handler for state', { state: session.state });
+            logger.error({ state: session.state }, 'No handler for state');
             await sender.sendText(ctx.phoneNumber, templates.errorGeneric);
             return;
         }
 
         // Execute handler
-        const result = await handler.handle(ctx);
+        const result = await handler.handle(fullCtx);
 
         // Validate transition
         const transitionResult = attemptTransition(
@@ -70,11 +74,11 @@ export async function processMessage(
         );
 
         if (!transitionResult.success) {
-            logger.warn('Invalid state transition', {
+            logger.warn({
                 from: session.state,
                 to: result.nextState,
                 error: transitionResult.error,
-            });
+            }, 'Invalid state transition');
             // Stay in current state but still send responses
         }
 
@@ -85,11 +89,11 @@ export async function processMessage(
                 result.nextState,
                 result.stateData
             );
-            logger.info('State transition', {
+            logger.info({
                 from: session.state,
                 to: result.nextState,
                 phoneNumber: ctx.phoneNumber,
-            });
+            }, 'State transition');
         } else {
             // Just update state data
             await sessionRepo.updateSession(session.id, {
@@ -101,18 +105,18 @@ export async function processMessage(
         for (const response of result.responses) {
             const sendResult = await sender.send(response);
             if (!sendResult.success) {
-                logger.error('Failed to send message', {
+                logger.error({
                     error: sendResult.error,
                     phoneNumber: ctx.phoneNumber,
-                });
+                }, 'Failed to send message');
             }
         }
     } catch (error) {
-        logger.error('Message processing error', {
+        logger.error({
             error,
             phoneNumber: ctx.phoneNumber,
             state: session.state,
-        });
+        }, 'Message processing error');
 
         // Send error message
         await sender.sendText(ctx.phoneNumber, templates.errorGeneric);

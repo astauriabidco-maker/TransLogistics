@@ -27,37 +27,30 @@ export class SuiviHandler {
             return this.requestTrackingCode(phoneNumber, templates);
         }
 
-        // TODO: Call ShipmentService.getShipmentByTrackingCode(trackingCode)
-        // For now, use mock data
+        // Call real ShipmentService
+        try {
+            const shipment = await ctx.services.shipment.getByTrackingCode(trackingCode);
 
-        const mockShipment = this.getMockShipment(trackingCode);
+            // Map real shipment to display format
+            const displayShipment: MockShipment = {
+                trackingCode: shipment.trackingCode,
+                status: shipment.status,
+                lastUpdate: shipment.updatedAt,
+                origin: 'Abidjan', // To be retrieved from route if needed
+                destination: 'Bouaké',
+                estimatedDelivery: new Date(shipment.createdAt.getTime() + 48 * 3600 * 1000), // Approx
+            };
 
-        if (!mockShipment) {
+            return this.displayTracking(phoneNumber, displayShipment, templates);
+        } catch (error) {
             return this.handleNotFound(phoneNumber, templates);
         }
-
-        return this.displayTracking(phoneNumber, mockShipment, templates);
     }
 
-    private extractTrackingCode(text: string): string | null {
+    private extractTrackingCode(text: string): string | undefined {
         // Match pattern: TL-XXXXXX or similar
         const match = text.match(/TL-?[A-Z0-9]{6,12}/i);
-        return match ? match[0].toUpperCase() : null;
-    }
-
-    private getMockShipment(trackingCode: string): MockShipment | null {
-        // Simulate found shipment for demo
-        if (trackingCode.startsWith('TL')) {
-            return {
-                trackingCode,
-                status: 'IN_TRANSIT',
-                lastUpdate: new Date(),
-                origin: 'Abidjan',
-                destination: 'Bouaké',
-                estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-            };
-        }
-        return null;
+        return match ? match[0].toUpperCase() : undefined;
     }
 
     private displayTracking(

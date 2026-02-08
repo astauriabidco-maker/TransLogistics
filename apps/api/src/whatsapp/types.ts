@@ -45,6 +45,7 @@ export interface WhatsAppSession {
 }
 
 export interface SessionStateData {
+    [key: string]: any;
     // CHOIX_SERVICE
     selectedService?: 'ENVOI' | 'SUIVI';
 
@@ -67,6 +68,7 @@ export interface SessionStateData {
     trackingCode?: string;
 
     // General
+    shipmentId?: string;
     lastMessageId?: string;
     retryCount?: number;
     errorMessage?: string;
@@ -222,11 +224,14 @@ export interface ListRow {
 // HANDLER CONTEXT
 // ==================================================
 
+import { ServiceRegistry } from './service-registry';
+
 export interface HandlerContext {
     session: WhatsAppSession;
     message: IncomingMessage;
     phoneNumber: string;
     userName?: string;
+    services: ServiceRegistry;
 }
 
 export interface HandlerResult {

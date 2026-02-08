@@ -7,6 +7,7 @@
 
 import type { HandlerContext, HandlerResult, OutgoingMessage } from '../types';
 import { getTemplates, format } from '../templates';
+import { logger } from '../../lib/logger';
 
 export class CalculPrixHandler {
     readonly state = 'CALCUL_PRIX' as const;
@@ -22,69 +23,81 @@ export class CalculPrixHandler {
             return this.sendWaiting(phoneNumber, templates);
         }
 
-        // TODO: Call ScanService.getScanById(scanResultId) to get dimensions
-        // TODO: Call QuoteService.createQuoteFromScan({
-        //   shipmentId: session.stateData.shipmentId,
-        //   scanResultId,
-        //   weightKg: estimatedWeight,
-        // });
+        // Create real quote from scan
+        try {
+            const scan = await ctx.services.scan.getScanById(scanResultId);
+            const quote = await ctx.services.quote.createQuoteFromScan({
+                shipmentId: session.stateData.shipmentId!,
+                scanResultId,
+                weightKg: Number(scan.validatedDimensions?.weightKg || scan.detectedDimensions?.weightKg || 1),
+                validityMinutes: 24 * 60,
+            }, {
+                requestId: `wa-quote-${scanResultId}`,
+                timestamp: new Date()
+            });
 
-        // Mock quote data for now
-        const mockQuote = {
-            id: `quote_${Date.now()}`,
-            dimensions: { length: 30, width: 20, height: 15 },
-            weight: 2.5,
-            origin: 'Abidjan',
-            destination: 'Bouaké',
-            price: 5500,
-            validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        };
+            // Format price message
+            const priceText = format(templates.priceResult, {
+                length: Math.round(Number(quote.dimensions.lengthCm)),
+                width: Math.round(Number(quote.dimensions.widthCm)),
+                height: Math.round(Number(quote.dimensions.heightCm)),
+                weight: Number(quote.weightKg),
+                origin: 'Abidjan',
+                destination: 'Bouaké',
+                price: Math.round(Number(quote.breakdown.total.amount)).toLocaleString('fr-FR'),
+            });
 
-        // Format price message
-        const priceText = format(templates.priceResult, {
-            length: mockQuote.dimensions.length,
-            width: mockQuote.dimensions.width,
-            height: mockQuote.dimensions.height,
-            weight: mockQuote.weight,
-            origin: mockQuote.origin,
-            destination: mockQuote.destination,
-            price: mockQuote.price.toLocaleString('fr-FR'),
-        });
-
-        const responses: OutgoingMessage[] = [
-            {
-                messaging_product: 'whatsapp',
-                recipient_type: 'individual',
-                to: phoneNumber,
-                type: 'text',
-                text: { body: priceText },
-            },
-            {
-                messaging_product: 'whatsapp',
-                recipient_type: 'individual',
-                to: phoneNumber,
-                type: 'interactive',
-                interactive: {
-                    type: 'button',
-                    body: { text: templates.confirmPrompt },
-                    action: {
-                        buttons: [
-                            { type: 'reply', reply: { id: 'CONFIRM_YES', title: templates.confirmYes } },
-                            { type: 'reply', reply: { id: 'CONFIRM_NO', title: templates.confirmNo } },
-                        ],
+            const responses: OutgoingMessage[] = [
+                {
+                    messaging_product: 'whatsapp',
+                    recipient_type: 'individual',
+                    to: phoneNumber,
+                    type: 'text',
+                    text: { body: priceText },
+                },
+                {
+                    messaging_product: 'whatsapp',
+                    recipient_type: 'individual',
+                    to: phoneNumber,
+                    type: 'interactive',
+                    interactive: {
+                        type: 'button',
+                        body: { text: templates.confirmPrompt },
+                        action: {
+                            buttons: [
+                                { type: 'reply', reply: { id: 'CONFIRM_YES', title: templates.confirmYes } },
+                                { type: 'reply', reply: { id: 'CONFIRM_NO', title: templates.confirmNo } },
+                            ],
+                        },
                     },
                 },
-            },
-        ];
+            ];
 
-        return {
-            nextState: 'CONFIRMATION',
-            stateData: {
-                quoteId: mockQuote.id,
-                quotePriceXof: mockQuote.price,
-            },
-            responses,
-        };
+            return {
+                nextState: 'CONFIRMATION',
+                stateData: {
+                    quoteId: quote.id,
+                    quotePriceXof: Math.round(Number(quote.breakdown.total.amount)),
+                },
+                responses,
+            };
+        } catch (error) {
+            logger.error({ error, scanResultId }, 'Failed to create quote');
+            const responses: OutgoingMessage[] = [
+                {
+                    messaging_product: 'whatsapp',
+                    recipient_type: 'individual',
+                    to: phoneNumber,
+                    type: 'text',
+                    text: { body: templates.errorGeneric },
+                },
+            ];
+            return {
+                nextState: 'CHOIX_SERVICE',
+                stateData: {},
+                responses,
+            };
+        }
     }
 
     private sendWaiting(

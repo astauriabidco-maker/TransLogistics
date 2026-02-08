@@ -49,14 +49,14 @@ export class WhatsAppAuditLogger {
                     messageType: message.type,
                     messageId: message.id,
                     state,
-                    payload: this.sanitizePayload(message),
+                    payload: this.sanitizePayload(message) as any,
                     processingTimeMs,
                     errorMessage,
                 },
             });
         } catch (error) {
             // Log but don't fail on audit errors
-            logger.error('Failed to write audit log', { error, messageId: message.id });
+            logger.error({ error, messageId: message.id }, 'Failed to write audit log');
         }
     }
 
@@ -78,12 +78,12 @@ export class WhatsAppAuditLogger {
                     messageType,
                     messageId,
                     state,
-                    payload: payload ? this.sanitizePayload(payload) : null,
+                    payload: payload ? (this.sanitizePayload(payload) as any) : null,
                 },
             });
         } catch (error) {
             // Log but don't fail on audit errors
-            logger.error('Failed to write audit log', { error, messageId });
+            logger.error({ error, messageId }, 'Failed to write audit log');
         }
     }
 

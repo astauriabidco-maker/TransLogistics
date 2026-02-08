@@ -5,7 +5,7 @@
  * Creates draft shipment for ENVOI flow.
  */
 
-import type { HandlerContext, HandlerResult, OutgoingMessage } from '../types';
+import type { HandlerContext, HandlerResult, OutgoingMessage, IncomingMessage } from '../types';
 import { getTemplates } from '../templates';
 
 export class ChoixServiceHandler {
@@ -19,7 +19,7 @@ export class ChoixServiceHandler {
         const selectedId = this.getSelectedButtonId(message);
 
         if (selectedId === 'SERVICE_ENVOI') {
-            return this.handleEnvoi(phoneNumber, templates);
+            return this.handleEnvoi(phoneNumber, templates, ctx);
         }
 
         if (selectedId === 'SERVICE_SUIVI') {
@@ -30,7 +30,7 @@ export class ChoixServiceHandler {
         return this.resendMenu(phoneNumber, templates);
     }
 
-    private getSelectedButtonId(message: typeof ctx.message): string | null {
+    private getSelectedButtonId(message: IncomingMessage): string | null {
         if (message.type === 'interactive') {
             return message.interactive?.button_reply?.id ?? null;
         }
@@ -52,10 +52,49 @@ export class ChoixServiceHandler {
 
     private async handleEnvoi(
         phoneNumber: string,
-        templates: ReturnType<typeof getTemplates>
+        templates: ReturnType<typeof getTemplates>,
+        ctx: HandlerContext
     ): Promise<HandlerResult> {
-        // TODO: Call ShipmentService.createShipment() to get shipmentId
-        // For now, we just transition to SCAN_PHOTO
+        const { services, userName } = ctx;
+        const prisma = services.prisma;
+
+        // 1. Find or create customer by phone number
+        let user = await prisma.user.findUnique({
+            where: { phone: phoneNumber },
+        });
+
+        if (!user) {
+            // Create a minimal placeholder user
+            user = await prisma.user.create({
+                data: {
+                    phone: phoneNumber,
+                    firstName: userName?.split(' ')[0] || 'Client',
+                    lastName: userName?.split(' ').slice(1).join(' ') || 'WhatsApp',
+                    passwordHash: 'PBKDF2$WHATSAPP$PLACEHOLDER', // Bot-created
+                    role: 'CUSTOMER',
+                },
+            });
+        }
+
+        // 2. Get a default active route (Abidjan -> Bouaké typically)
+        const route = await prisma.route.findFirst({
+            where: { status: 'ACTIVE' },
+        }) || await prisma.route.findFirst();
+
+        if (!route) {
+            throw new Error('No routes available in system');
+        }
+
+        // 3. Create Draft Shipment
+        const shipment = await services.shipment.createDraft({
+            customerId: user.id,
+            routeId: route.id,
+            packageDescription: 'Envoi via WhatsApp',
+            originPhone: phoneNumber,
+            originContactName: user.firstName + ' ' + user.lastName,
+            destPhone: phoneNumber, // To be updated
+            destContactName: 'Destinataire',
+        });
 
         const responses: OutgoingMessage[] = [
             {
@@ -71,7 +110,7 @@ export class ChoixServiceHandler {
             nextState: 'SCAN_PHOTO',
             stateData: {
                 selectedService: 'ENVOI',
-                // shipmentId will be set when shipment is created
+                shipmentId: shipment.id,
             },
             responses,
         };

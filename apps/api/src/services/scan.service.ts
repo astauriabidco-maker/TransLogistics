@@ -27,6 +27,8 @@ import {
 import { logger } from '../lib/logger';
 import { VolumeScanPipeline } from '../volumescan';
 import type { VolumeScanInput, DimensionResult } from '../volumescan';
+import { ScanAutoValidationService } from './scan-auto-validation.service';
+import type { ScanDataForEvaluation } from './scan-auto-validation.service';
 
 // ==================================================
 // CONSTANTS
@@ -58,7 +60,11 @@ export interface DeclareManualDimensionsInput {
 // ==================================================
 
 export class ScanService implements IScanService {
-    constructor(private readonly prisma: PrismaClient) { }
+    private readonly autoValidation: ScanAutoValidationService;
+
+    constructor(private readonly prisma: PrismaClient) {
+        this.autoValidation = new ScanAutoValidationService(prisma);
+    }
 
     // --------------------------------------------------
     // DECLARE MANUAL DIMENSIONS (PRIMARY STUB METHOD)
@@ -230,15 +236,29 @@ export class ScanService implements IScanService {
 
         // Success - create scan result
         const successResult = result as DimensionResult;
+
+        // Evaluate auto-validation through governance pipeline (Contract S1)
+        const scanEvalData: ScanDataForEvaluation = {
+            scanResultId: '', // Will be set after creation
+            shipmentId: input.shipmentId,
+            hubId: ctx.hubId ?? null,
+            confidenceScore: successResult.confidence_score,
+            modelVersion: successResult.model_version,
+        };
+
+        const autoDecision = await this.autoValidation.evaluate(scanEvalData);
+        const shouldAutoValidate = autoDecision.decision === 'AUTO_VALIDATE';
+
         const scanResult = await this.prisma.scanResult.create({
             data: {
                 shipmentId: input.shipmentId,
-                status: successResult.requires_manual_review ? 'COMPLETED' : 'VALIDATED',
+                status: shouldAutoValidate ? 'VALIDATED' : 'COMPLETED',
                 source: 'AI',
                 inputImageHash: `scan-${Date.now()}`,
                 referenceObject: 'A4',
                 referenceWidthMm: 210,
                 referenceHeightMm: 297,
+                hubId: ctx.hubId ?? null,
 
                 // Detected dimensions (mm to cm)
                 detectedLengthCm: successResult.dimensions_mm.length / 10,
@@ -248,25 +268,27 @@ export class ScanService implements IScanService {
 
                 // Confidence
                 confidenceScore: successResult.confidence_score,
-                requiresManualValidation: successResult.requires_manual_review,
+                requiresManualValidation: !shouldAutoValidate,
 
                 // Traceability
                 modelName: successResult.model_name,
                 modelVersion: successResult.model_version,
                 processingTimeMs: successResult.processing_time_ms,
 
-                // If high confidence, auto-validate
-                ...(!successResult.requires_manual_review && {
+                // Auto-validation fields (if approved by governance)
+                ...(shouldAutoValidate && {
                     validatedLengthCm: successResult.dimensions_mm.length / 10,
                     validatedWidthCm: successResult.dimensions_mm.width / 10,
                     validatedHeightCm: successResult.dimensions_mm.height / 10,
                     validatedWeightKg: successResult.estimated_weight_volumetric_kg,
-                    validatedById: 'ai-system',
+                    validatedById: 'ai-auto-validation',
                     validatedAt: new Date(),
                     completedAt: new Date(),
                 }),
 
-                validationNotes: successResult.review_reason,
+                validationNotes: shouldAutoValidate
+                    ? `[AUTO] ${autoDecision.reasoning}`
+                    : successResult.review_reason ?? autoDecision.reasoning,
             },
         });
 

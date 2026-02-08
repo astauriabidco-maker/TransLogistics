@@ -1,0 +1,406 @@
+/* Automation Control Panel Styles */
+
+/* ── Module Status Cards ── */
+
+.auto-panel {
+    max-width: 1200px;
+}
+
+.auto-header {
+    margin-bottom: 1.5rem;
+}
+
+.auto-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1f2e;
+}
+
+.auto-subtitle {
+    margin: 0.25rem 0 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.auto-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.auto-module-card {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #e5e7eb;
+    position: relative;
+}
+
+.auto-module-card.zone-safe {
+    border-left-color: #10b981;
+}
+
+.auto-module-card.zone-guarded {
+    border-left-color: #f59e0b;
+}
+
+.auto-module-card.zone-restricted {
+    border-left-color: #ef4444;
+}
+
+.auto-module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.auto-module-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1a1f2e;
+    margin: 0;
+}
+
+.auto-module-contract {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.auto-module-contract.safe {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.auto-module-contract.guarded {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.auto-module-contract.restricted {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.auto-module-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.auto-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.auto-status-dot.on {
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.auto-status-dot.off {
+    background: #9ca3af;
+}
+
+.auto-status-label {
+    font-size: 0.8125rem;
+    color: #374151;
+}
+
+.auto-module-meta {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.auto-module-toggle {
+    margin-top: 0.75rem;
+}
+
+.auto-toggle-btn {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+    color: #374151;
+}
+
+.auto-toggle-btn:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.auto-toggle-btn.stop {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.auto-toggle-btn.stop:hover {
+    background: #fef2f2;
+}
+
+.auto-toggle-btn.start {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.auto-toggle-btn.start:hover {
+    background: #f0fdf4;
+}
+
+.auto-toggle-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Kill Switch ── */
+
+.auto-killswitch {
+    background: #1a1f2e;
+    border-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auto-killswitch-info {
+    color: white;
+}
+
+.auto-killswitch-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.auto-killswitch-desc {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0.25rem 0 0;
+}
+
+.auto-killswitch-btn {
+    padding: 0.5rem 1.25rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.auto-killswitch-btn.active {
+    background: #ef4444;
+    color: white;
+}
+
+.auto-killswitch-btn.active:hover {
+    background: #dc2626;
+}
+
+.auto-killswitch-btn.inactive {
+    background: #10b981;
+    color: white;
+}
+
+.auto-killswitch-btn.inactive:hover {
+    background: #059669;
+}
+
+/* ── Section Titles ── */
+
+.auto-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a1f2e;
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ── Actions Log & Fraud Alerts Table ── */
+
+.auto-table-container {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.auto-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.auto-table th,
+.auto-table td {
+    padding: 0.625rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.8125rem;
+}
+
+.auto-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+}
+
+.auto-table tr:hover {
+    background: #f9fafb;
+}
+
+.auto-table td.mono {
+    font-family: 'SF Mono', 'Menlo', monospace;
+    font-size: 0.75rem;
+}
+
+/* ── Status Badges ── */
+
+.auto-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.auto-badge.open {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.auto-badge.under-review {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.auto-badge.resolved {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.auto-badge.high {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.auto-badge.medium {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.auto-badge.low {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+/* ── Empty & Loading ── */
+
+.auto-empty {
+    text-align: center;
+    padding: 2rem;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.auto-loading {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+.auto-error {
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.375rem;
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+/* ── Tabs ── */
+
+.auto-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0;
+}
+
+.auto-tab {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+}
+
+.auto-tab:hover {
+    color: #374151;
+}
+
+.auto-tab.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+/* ── Fraud Alert Summary ── */
+
+.auto-alert-summary {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.auto-alert-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 0.375rem;
+    border: 1px solid #e5e7eb;
+    font-size: 0.8125rem;
+}
+
+.auto-alert-stat .count {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #1a1f2e;
+}
+
+.auto-alert-stat .label {
+    color: #6b7280;
+}
